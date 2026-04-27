@@ -11,6 +11,8 @@ pub enum DataKey {
     Recipients,
     /// Tracks the last ledger sequence in which a distribution was processed.
     LastDistributeLedger,
+    /// Cumulative amount distributed per token address.
+    TotalDistributed(Address),
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -129,6 +131,16 @@ impl RevenueSplitContract {
                 client.transfer(&from, &payment.destination, &payment.amount);
             }
         }
+
+        // Accumulate total distributed for this token
+        let td_key = DataKey::TotalDistributed(token.clone());
+        let prev: i128 = env.storage().persistent().get(&td_key).unwrap_or(0);
+        env.storage().persistent().set(&td_key, &(prev + amount));
+        env.storage().persistent().extend_ttl(
+            &td_key,
+            PERSISTENT_TTL_THRESHOLD,
+            PERSISTENT_TTL_EXTEND_TO,
+        );
     }
 
     /// Returns the ledger sequence of the last successful distribution.
@@ -136,6 +148,15 @@ impl RevenueSplitContract {
         env.storage()
             .persistent()
             .get(&DataKey::LastDistributeLedger)
+            .unwrap_or(0)
+    }
+
+    /// Returns the cumulative amount of a given token that has been distributed
+    /// through this contract since deployment.
+    pub fn get_total_distributed(env: Env, token: Address) -> i128 {
+        env.storage()
+            .persistent()
+            .get(&DataKey::TotalDistributed(token))
             .unwrap_or(0)
     }
 

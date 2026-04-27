@@ -1697,3 +1697,264 @@ fn test_ledger_replay_partial_panics_same_ledger() {
     // Same ledger — should panic
     client.execute_batch_partial(&sender, &token, &payments, &1);
 }
+
+// ── PART 23 REGRESSION TESTS ──────────────────────────────────────────────────
+
+#[test]
+fn test_payment_entry_storage_v2_success() {
+    let (env, sender, token, client) = setup_with_ledger(100);
+    let mut payments: Vec<PaymentOp> = Vec::new(&env);
+    payments.push_back(PaymentOp {
+        recipient: Address::generate(&env),
+        amount: 500,
+        category: soroban_sdk::symbol_short!("payroll"),
+    });
+
+    let batch_id = client.execute_batch_v2(&sender, &token, &payments, &0, &true);
+    let entry = client.get_payment_entry(&batch_id, &0);
+    assert_eq!(entry.amount, 500);
+    assert_eq!(entry.status, PaymentStatus::Sent);
+}
+
+#[test]
+fn test_refund_failed_payment_temporary_storage() {
+    let (env, sender, token, client) = setup_with_ledger(200);
+    let mut payments: Vec<PaymentOp> = Vec::new(&env);
+    payments.push_back(PaymentOp {
+        recipient: Address::generate(&env),
+        amount: 0,
+        category: soroban_sdk::symbol_short!("payroll"),
+    });
+
+    let batch_id = client.execute_batch_v2(&sender, &token, &payments, &0, &false);
+
+    let entry = client.get_payment_entry(&batch_id, &0);
+    assert_eq!(entry.status, PaymentStatus::Failed);
+
+    client.refund_failed_payment(&batch_id, &0);
+
+    let updated_entry = client.get_payment_entry(&batch_id, &0);
+    assert_eq!(updated_entry.status, PaymentStatus::Refunded);
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// ── SCHEDULED BATCH TESTS (Issue #632 / Part 42) ─────────────────────────────
+// ══════════════════════════════════════════════════════════════════════════════
+//
+//   ScheduledBatchNotFound     = 19 → Error(Contract, #19)
+//   ScheduledBatchNotReady     = 20 → Error(Contract, #20)
+//   ScheduledBatchConsumed     = 21 → Error(Contract, #21)
+//   ScheduledBatchUnauthorized = 22 → Error(Contract, #22)
+
+#[test]
+fn test_schedule_batch_returns_sequential_id() {
+    let (env, sender, token, client) = setup();
+    let payments = one_payment(&env);
+
+    let id1 = client.schedule_batch(&sender, &token, &payments, &200);
+    let id2 = client.schedule_batch(&sender, &token, &payments, &200);
+
+    assert_eq!(id1, 1);
+    assert_eq!(id2, 2);
+}
+
+#[test]
+fn test_get_scheduled_batch_returns_stored_data() {
+    let (env, sender, token, client) = setup();
+    let payments = one_payment(&env);
+
+    let id = client.schedule_batch(&sender, &token, &payments, &200);
+    let batch = client.get_scheduled_batch(&id);
+
+    assert_eq!(batch.sender, sender);
+    assert_eq!(batch.token, token);
+    assert_eq!(batch.execute_after_ledger, 200);
+    assert_eq!(batch.status, ScheduledBatchStatus::Pending);
+    assert_eq!(batch.payments.len(), 1);
+}
+
+#[test]
+fn test_execute_scheduled_batch_transfers_funds() {
+    let (env, sender, token, client) = setup_with_ledger(100);
+
+    let recipient = Address::generate(&env);
+    let mut payments: Vec<PaymentOp> = Vec::new(&env);
+    payments.push_back(PaymentOp {
+        recipient: recipient.clone(),
+        amount: 500,
+        category: soroban_sdk::symbol_short!("payroll"),
+    });
+
+    // execute_after_ledger = current ledger → immediately executable
+    let scheduled_id = client.schedule_batch(&sender, &token, &payments, &100);
+    let batch_id = client.execute_scheduled_batch(&scheduled_id);
+
+    let tc = TokenClient::new(&env, &token);
+    assert_eq!(tc.balance(&recipient), 500);
+    assert_eq!(tc.balance(&sender), 999_500); // setup mints 1_000_000
+
+    let record = client.get_batch(&batch_id);
+    assert_eq!(record.total_sent, 500);
+    assert_eq!(record.success_count, 1);
+    assert_eq!(record.fail_count, 0);
+
+    let batch = client.get_scheduled_batch(&scheduled_id);
+    assert_eq!(batch.status, ScheduledBatchStatus::Executed);
+}
+
+#[test]
+fn test_execute_scheduled_batch_only_after_target_ledger() {
+    let (env, sender, token, client) = setup_with_ledger(100);
+    let payments = one_payment(&env);
+
+    // Schedule for ledger 200, advance to exactly 200
+    let scheduled_id = client.schedule_batch(&sender, &token, &payments, &200);
+
+    env.ledger().set_sequence_number(200);
+    let batch_id = client.execute_scheduled_batch(&scheduled_id);
+
+    let record = client.get_batch(&batch_id);
+    assert_eq!(record.success_count, 1);
+}
+
+#[test]
+#[should_panic(expected = "Error(Contract, #20)")]
+fn test_execute_scheduled_batch_not_ready_panics() {
+    let (env, sender, token, client) = setup_with_ledger(100);
+    let payments = one_payment(&env);
+
+    // Schedule for ledger 200, current ledger is 100 → not ready
+    let scheduled_id = client.schedule_batch(&sender, &token, &payments, &200);
+    client.execute_scheduled_batch(&scheduled_id);
+}
+
+#[test]
+#[should_panic(expected = "Error(Contract, #19)")]
+fn test_execute_scheduled_batch_not_found_panics() {
+    let (_env, _sender, _token, client) = setup();
+    client.execute_scheduled_batch(&999);
+}
+
+#[test]
+#[should_panic(expected = "Error(Contract, #21)")]
+fn test_execute_scheduled_batch_already_executed_panics() {
+    let (env, sender, token, client) = setup_with_ledger(100);
+    let payments = one_payment(&env);
+
+    let scheduled_id = client.schedule_batch(&sender, &token, &payments, &100);
+    client.execute_scheduled_batch(&scheduled_id); // first → ok
+
+    env.ledger().set_sequence_number(101);
+    client.execute_scheduled_batch(&scheduled_id); // second → ScheduledBatchConsumed
+}
+
+#[test]
+fn test_cancel_scheduled_batch_marks_cancelled() {
+    let (env, sender, token, client) = setup();
+    let payments = one_payment(&env);
+
+    let scheduled_id = client.schedule_batch(&sender, &token, &payments, &200);
+    client.cancel_scheduled_batch(&sender, &scheduled_id);
+
+    let batch = client.get_scheduled_batch(&scheduled_id);
+    assert_eq!(batch.status, ScheduledBatchStatus::Cancelled);
+}
+
+#[test]
+#[should_panic(expected = "Error(Contract, #22)")]
+fn test_cancel_scheduled_batch_unauthorized_panics() {
+    let (env, sender, token, client) = setup();
+    let payments = one_payment(&env);
+
+    let scheduled_id = client.schedule_batch(&sender, &token, &payments, &200);
+
+    let attacker = Address::generate(&env);
+    client.cancel_scheduled_batch(&attacker, &scheduled_id);
+}
+
+#[test]
+#[should_panic(expected = "Error(Contract, #21)")]
+fn test_cancel_already_cancelled_batch_panics() {
+    let (env, sender, token, client) = setup();
+    let payments = one_payment(&env);
+
+    let scheduled_id = client.schedule_batch(&sender, &token, &payments, &200);
+    client.cancel_scheduled_batch(&sender, &scheduled_id);
+    // Second cancel → ScheduledBatchConsumed
+    client.cancel_scheduled_batch(&sender, &scheduled_id);
+}
+
+#[test]
+#[should_panic(expected = "Error(Contract, #21)")]
+fn test_execute_cancelled_batch_panics() {
+    let (env, sender, token, client) = setup_with_ledger(100);
+    let payments = one_payment(&env);
+
+    let scheduled_id = client.schedule_batch(&sender, &token, &payments, &100);
+    client.cancel_scheduled_batch(&sender, &scheduled_id);
+
+    // Cancelled batch cannot be executed → ScheduledBatchConsumed
+    client.execute_scheduled_batch(&scheduled_id);
+}
+
+#[test]
+#[should_panic(expected = "Error(Contract, #17)")]
+fn test_schedule_batch_blocked_when_paused() {
+    let (env, sender, token, client) = setup();
+    client.set_paused(&true);
+
+    let payments = one_payment(&env);
+    client.schedule_batch(&sender, &token, &payments, &200);
+}
+
+#[test]
+#[should_panic(expected = "Error(Contract, #4)")]
+fn test_schedule_batch_empty_payments_panics() {
+    let (env, sender, token, client) = setup();
+    let payments: Vec<PaymentOp> = Vec::new(&env);
+    client.schedule_batch(&sender, &token, &payments, &200);
+}
+
+#[test]
+#[should_panic(expected = "Error(Contract, #6)")]
+fn test_schedule_batch_invalid_amount_panics() {
+    let (env, sender, token, client) = setup();
+    let mut payments: Vec<PaymentOp> = Vec::new(&env);
+    payments.push_back(PaymentOp {
+        recipient: Address::generate(&env),
+        amount: -1,
+        category: soroban_sdk::symbol_short!("payroll"),
+    });
+    client.schedule_batch(&sender, &token, &payments, &200);
+}
+
+#[test]
+#[should_panic(expected = "Error(Contract, #19)")]
+fn test_get_scheduled_batch_not_found_panics() {
+    let (_env, _sender, _token, client) = setup();
+    client.get_scheduled_batch(&999);
+}
+
+#[test]
+#[should_panic(expected = "Error(Contract, #19)")]
+fn test_cancel_nonexistent_batch_panics() {
+    let (env, sender, _token, client) = setup();
+    client.cancel_scheduled_batch(&sender, &999);
+}
+
+#[test]
+fn test_cancel_scheduled_batch_returns_held_funds() {
+    let (env, sender, token, client) = setup();
+    let payments = one_payment(&env); // amount = 10
+
+    let tc = TokenClient::new(&env, &token);
+    let balance_before = tc.balance(&sender);
+
+    let scheduled_id = client.schedule_batch(&sender, &token, &payments, &200);
+    // Funds pulled at schedule time
+    assert_eq!(tc.balance(&sender), balance_before - 10);
+
+    client.cancel_scheduled_batch(&sender, &scheduled_id);
+    // Funds returned on cancel
+    assert_eq!(tc.balance(&sender), balance_before);
+}

@@ -8,6 +8,7 @@ import { emitBulkUpdate } from '../services/socketService.js';
 import { BalanceService } from '../services/balanceService.js';
 import { webhookNotificationService } from '../services/webhookNotificationService.js';
 import { NotificationQueueService } from '../services/notificationQueueService.js';
+import { TransactionVerificationQueueService } from '../services/transactionVerificationQueueService.js';
 import taxService from '../services/taxService.js';
 import logger from '../utils/logger.js';
 import { Keypair, Asset, Operation, TransactionBuilder } from '@stellar/stellar-sdk';
@@ -17,6 +18,7 @@ import { getAssetIssuer } from '../config/assets.js';
  * Worker to process payroll runs in the background.
  */
 const notificationQueueService = new NotificationQueueService();
+const txVerificationQueueService = TransactionVerificationQueueService;
 
 export const payrollWorker = new Worker<PayrollJobData>(
   PAYROLL_QUEUE_NAME,
@@ -179,6 +181,20 @@ export const payrollWorker = new Worker<PayrollJobData>(
 
           const result = await StellarService.submitTransaction(tx);
           logger.info(`Chunk ${i + 1} submitted successfully. Tx Hash: ${result.hash}`);
+
+          // Verify on-chain & persist immutable audit record (async).
+          try {
+            await txVerificationQueueService.enqueue({
+              txHash: result.hash,
+              source: 'payroll',
+              organizationId: payroll_run.organization_id,
+            });
+          } catch (enqueueError) {
+            logger.warn('Failed to enqueue tx verification (continuing)', {
+              txHash: result.hash,
+              error: enqueueError instanceof Error ? enqueueError.message : 'Unknown error',
+            });
+          }
 
           // Update database for items in this chunk and log audit entries
           for (const item of chunk) {

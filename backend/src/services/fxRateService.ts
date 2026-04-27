@@ -1,5 +1,6 @@
 import { getRedisClient } from './rateLimitService.js';
 import logger from '../utils/logger.js';
+import { withRetry } from '../utils/retry.js';
 
 export const FX_RATES_CACHE_KEY = 'payd:fx:rates:orgusd';
 export const FX_RATES_CACHE_TTL_SEC = 300;
@@ -77,13 +78,13 @@ async function fetchCoinbase(): Promise<Record<string, number>> {
 
 async function fetchLiveRates(): Promise<{ rates: Record<string, number>; provider: string }> {
   try {
-    const rates = await fetchOpenErApi();
+    const rates = await withRetry(() => fetchOpenErApi());
     return { rates, provider: 'open.er-api.com' };
   } catch (primaryErr) {
     logger.warn('FX primary provider failed, trying Coinbase', {
       error: (primaryErr as Error).message,
     });
-    const rates = await fetchCoinbase();
+    const rates = await withRetry(() => fetchCoinbase());
     return { rates, provider: 'api.coinbase.com' };
   }
 }

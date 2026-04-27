@@ -14,6 +14,7 @@ import {
   Upload,
   UserCircle2,
   Users,
+  X,
 } from 'lucide-react';
 import { EmployeeRemovalConfirmModal } from './EmployeeRemovalConfirmModal';
 
@@ -139,6 +140,7 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
   const [sortKey, setSortKey] = useState<keyof Employee>('name');
   const [sortAsc, setSortAsc] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'All' | 'Active' | 'Inactive'>('All');
   const [editSalary, setEditSalary] = useState<number>(0);
   const debouncedSearch = useDebounce(searchQuery, 300);
 
@@ -185,18 +187,18 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
   };
 
   const filteredEmployees = useMemo(() => {
-    if (!debouncedSearch) return employees;
-
     const query = debouncedSearch.toLowerCase();
     return employees.filter((employee) => {
-      return (
+      const matchesSearch =
+        !query ||
         employee.name.toLowerCase().includes(query) ||
         employee.email.toLowerCase().includes(query) ||
         employee.position.toLowerCase().includes(query) ||
-        employee.wallet?.toLowerCase().includes(query)
-      );
+        employee.wallet?.toLowerCase().includes(query);
+      const matchesStatus = statusFilter === 'All' || employee.status === statusFilter;
+      return matchesSearch && matchesStatus;
     });
-  }, [debouncedSearch, employees]);
+  }, [debouncedSearch, employees, statusFilter]);
 
   const sortedEmployees = useMemo(() => {
     return [...filteredEmployees].sort((a, b) => {
@@ -313,6 +315,31 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
             </label>
 
             <div className="flex flex-wrap items-center gap-2">
+              {/* Status filter */}
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value as 'All' | 'Active' | 'Inactive')}
+                aria-label="Filter by status"
+                className="rounded-2xl border border-hi bg-[var(--surface-hi)] px-4 py-3 text-sm font-semibold text-[var(--text)] transition focus:border-[var(--accent)] focus:outline-none focus:ring-2 focus:ring-[color:rgba(74,240,184,0.18)]"
+              >
+                <option value="All">All statuses</option>
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
+              </select>
+
+              {/* Clear filters */}
+              {(searchQuery || statusFilter !== 'All') && (
+                <button
+                  type="button"
+                  onClick={() => { setSearchQuery(''); setStatusFilter('All'); }}
+                  className="inline-flex items-center gap-1.5 rounded-2xl border border-hi bg-[var(--surface-hi)] px-3 py-3 text-sm text-[var(--muted)] transition hover:text-[var(--text)]"
+                  aria-label="Clear filters"
+                >
+                  <X className="h-4 w-4" aria-hidden />
+                  Clear
+                </button>
+              )}
+
               <button
                 type="button"
                 onClick={() => setShowCSVUploader((current) => !current)}
@@ -325,7 +352,143 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
           </div>
         </div>
       </div>
-
+      <table className="w-full text-left border-collapse">
+        <thead>
+          <tr className="border-b border-hi">
+            <th
+              className="p-6 text-xs font-bold uppercase tracking-widest text-muted cursor-pointer"
+              onClick={() => handleSort('name')}
+            >
+              Name {sortKey === 'name' && (sortAsc ? '▲' : '▼')}
+            </th>
+            <th
+              className="p-6 text-xs font-bold uppercase tracking-widest text-muted cursor-pointer"
+              onClick={() => handleSort('position')}
+            >
+              Role {sortKey === 'position' && (sortAsc ? '▲' : '▼')}
+            </th>
+            <th
+              className="p-6 text-xs font-bold uppercase tracking-widest text-muted cursor-pointer"
+              onClick={() => handleSort('wallet')}
+            >
+              Wallet {sortKey === 'wallet' && (sortAsc ? '▲' : '▼')}
+            </th>
+            <th
+              className="p-6 text-xs font-bold uppercase tracking-widest text-muted cursor-pointer"
+              onClick={() => handleSort('salary')}
+            >
+              Salary {sortKey === 'salary' && (sortAsc ? '▲' : '▼')}
+            </th>
+            <th
+              className="p-6 text-xs font-bold uppercase tracking-widest text-muted cursor-pointer"
+              onClick={() => handleSort('status')}
+            >
+              Status {sortKey === 'status' && (sortAsc ? '▲' : '▼')}
+            </th>
+            <th className="p-6 text-xs font-bold uppercase tracking-widest text-muted">Actions</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-gray-200">
+          {sortedEmployees.length === 0 ? (
+            <tr>
+              <td colSpan={6} className="p-10 text-center text-muted">
+                {searchQuery || statusFilter !== 'All' ? (
+                  <div className="flex flex-col items-center gap-2">
+                    <Search className="h-8 w-8 opacity-30" />
+                    <span>No employees match your search.</span>
+                    <button
+                      onClick={() => { setSearchQuery(''); setStatusFilter('All'); }}
+                      className="mt-1 text-sm underline hover:text-foreground"
+                    >
+                      Clear filters
+                    </button>
+                  </div>
+                ) : (
+                  'No employees found'
+                )}
+              </td>
+            </tr>
+          ) : (
+            sortedEmployees.map((employee) => (
+              <tr key={employee.id} className="cursor-pointer transition">
+                <td className="p-6">
+                  <div className="flex items-center gap-3">
+                    <Avatar
+                      email={employee.email}
+                      name={employee.name}
+                      imageUrl={employee.imageUrl}
+                      size="sm"
+                    />
+                    <div className="flex flex-col">
+                      <span className="text-xs text-muted">{employee.name}</span>
+                      <button
+                        type="button"
+                        className="text-[10px] text-blue-500 hover:underline text-left"
+                        onClick={() => setShowAvatarModal({ open: true, employee })}
+                      >
+                        Update photo
+                      </button>
+                    </div>
+                  </div>
+                </td>
+                <td className="p-6 text-sm font-medium">{employee.position}</td>
+                <td className="p-6 font-mono text-xs text-muted">
+                  {shortenWallet(employee.wallet || '')}
+                </td>
+                <td className="p-6">
+                  {/* Inline salary edit */}
+                  {onEditEmployee ? (
+                    <button
+                      className="text-blue-500 underline"
+                      onClick={() => {
+                        setEditSalary(employee.salary || 0);
+                        setShowEditModal({ open: true, employee });
+                      }}
+                    >
+                      {employee.salary ?? 0}
+                    </button>
+                  ) : (
+                    (employee.salary ?? 0)
+                  )}
+                </td>
+                <td className="p-6">
+                  <span
+                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
+                      employee.status === 'Active'
+                        ? 'bg-green-100 text-green-600 border-green-200'
+                        : 'bg-red-100 text-red-600 border-red-200'
+                    }`}
+                  >
+                    <div
+                      className={`w-1 h-1 rounded-full ${
+                        employee.status === 'Active' ? 'bg-green-600' : 'bg-red-600'
+                      }`}
+                    />
+                    {employee.status || '-'}
+                  </span>
+                </td>
+                <td className="p-6 flex gap-2">
+                  <button
+                    className="text-blue-500 hover:text-blue-700"
+                    title="Edit"
+                    onClick={() => {
+                      setEditSalary(employee.salary || 0);
+                      setShowEditModal({ open: true, employee });
+                    }}
+                  >
+                    <Pencil className="w-5 h-5" />
+                  </button>
+                  <button
+                    className="text-red-500 hover:text-red-700"
+                    title="Remove"
+                    onClick={() => setShowDeleteConfirm({ open: true, id: employee.id })}
+                  >
+                    <Trash2 className="w-5 h-5" />
+                  </button>
+                </td>
+              </tr>
+            ))
+          )}
       {showCSVUploader ? (
         <div className="border-b border-hi bg-[color:rgba(255,255,255,0.02)] px-5 py-6 sm:px-6">
           <div className="rounded-[24px] border border-[var(--border-hi)] bg-[var(--surface)] p-5 sm:p-6">

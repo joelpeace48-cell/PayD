@@ -8,6 +8,7 @@ Thank you for considering contributing to PayD! We're building a decentralized p
 - [Getting Started](#getting-started)
 - [Development Environment Setup](#development-environment-setup)
 - [Coding Standards](#coding-standards)
+- [Database Migrations](#database-migrations)
 - [Making Changes](#making-changes)
 - [Testing](#testing)
 - [Commit Conventions](#commit-conventions)
@@ -213,6 +214,73 @@ See [docs/FILENAMING_CONVENTIONS.md](docs/FILENAMING_CONVENTIONS.md) for the ful
 - **Links**: Use relative paths for internal docs
 - **Code examples**: Include language identifier in fenced code blocks
 - **Accessibility**: Use descriptive alt text for diagrams
+
+## Database Migrations
+
+> **This section is mandatory reading before submitting any PR that modifies the database schema.**
+
+### The Golden Rule
+
+Migration files are **immutable** once merged to `main`. The migration runner
+(`backend/src/db/migrate.ts`) stores a SHA-256 checksum of every file it applies.
+If the file's bytes change later — even a single space or comment — the runner
+detects the mismatch and aborts:
+
+```
+[migrate] DRIFT DETECTED: "017_create_schema_migrations.sql" was previously
+applied with checksum abc123... but the file now has checksum def456...
+Aborted to protect database integrity.
+```
+
+This is the most common cause of CI/CD pipeline failures in this project.
+
+### Always Create a New File
+
+Need to add a column? Fix a constraint? Add an index? **Create a new migration.**
+Never edit an existing one.
+
+```bash
+# 1. Find the next available number
+ls backend/src/db/migrations/*.sql | sed 's/.*\///' | grep -oP '^\d+' | sort -n | tail -1
+
+# 2. Create your migration (increment the number by 1)
+# Example: if the result was 038, create:
+touch backend/src/db/migrations/039_add_tax_region_to_employees.sql
+
+# 3. Create the matching rollback (required — PRs without it will be rejected)
+touch backend/src/db/rollbacks/039_add_tax_region_to_employees.sql
+```
+
+### PR Checklist (copy into your PR)
+
+```markdown
+- [ ] Migration file named correctly: NNN_short_description.sql
+- [ ] Migration number is unique (no duplicates with existing files)
+- [ ] Migration uses IF NOT EXISTS / IF EXISTS for idempotency
+- [ ] Matching rollback file created in backend/src/db/rollbacks/
+- [ ] npm run db:migrate:dry-run passes locally
+- [ ] Running npm run db:migrate twice gives Applied: 0 on the second run
+- [ ] No existing migration file was modified
+```
+
+### If CI Fails With a Migration Error
+
+| Error | Fix |
+|---|---|
+| `DRIFT DETECTED` | Restore the original file content; create a new migration for your changes |
+| `Duplicate migration prefix(es) detected` | Run `node scripts/resequence-migrations.mjs` from the repo root |
+| `Missing rollback file` | Create `backend/src/db/rollbacks/NNN_your_migration.sql` |
+
+### Full Documentation
+
+See **[`backend/src/db/MIGRATION_GUIDE.md`](backend/src/db/MIGRATION_GUIDE.md)** for:
+- Complete workflow with examples
+- How the checksum guard works
+- How to use the re-sequencing script
+- Troubleshooting guide
+- Full PR checklist
+
+---
 
 ## Making Changes
 

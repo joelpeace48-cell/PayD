@@ -10,8 +10,9 @@ const AuthCallback: React.FC = () => {
 
   useEffect(() => {
     const token = searchParams.get('token');
+    const refreshToken = searchParams.get('refreshToken');
     if (token) {
-      setTokenFromCallback(token);
+      setTokenFromCallback(token, refreshToken);
       const redirectPath = consumePostAuthRedirect() || '/';
       void navigate(redirectPath, { replace: true });
     } else {

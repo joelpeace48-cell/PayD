@@ -18,6 +18,7 @@ import {
 } from 'recharts';
 import type { PieLabelRenderProps } from 'recharts';
 import { Card } from '@stellar/design-system';
+import { parseDateString } from '../utils/dateHelpers';
 
 // recharts v3 + React 19: Legend's class-component typings conflict with React.JSX.
 // Cast it to a plain functional component to keep TypeScript happy.
@@ -59,8 +60,8 @@ async function fetchAnalytics(startDate: string, endDate: string): Promise<Analy
   // Simulates an API call — swap for `axios.get('/api/analytics/payroll', { params })`
   await new Promise((r) => setTimeout(r, 300));
 
-  const start = new Date(startDate);
-  const end = new Date(endDate);
+  const start = parseDateString(startDate) ?? new Date();
+  const end = parseDateString(endDate) ?? new Date();
 
   const trends: PayrollTrend[] = [];
   const metrics: PaymentMetric[] = [];

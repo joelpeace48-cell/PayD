@@ -15,13 +15,13 @@ The Soroban Event Indexer provides:
 
 ### Components
 
-1. **SorobanEventIndexer** (`src/services/sorobanEventIndexer.ts`)
+1. **SorobanEventIndexer** (`backend/src/services/sorobanEventIndexer.ts`)
    - Background service that polls Stellar Horizon API
    - Extracts events from contract invocations
    - Stores events in PostgreSQL with idempotent handling
    - Tracks last indexed ledger sequence for graceful restart
 
-2. **ContractEventsController** (`src/controllers/contractEventsController.ts`)
+2. **ContractEventsController** (`backend/src/controllers/contractEventsController.ts`)
    - REST API endpoints for querying stored events
    - Pagination support with configurable limits
    - Search and filtering capabilities

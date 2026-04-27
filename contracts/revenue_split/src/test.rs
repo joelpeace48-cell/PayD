@@ -394,3 +394,59 @@ fn test_preview_distribution_preserves_remainder_on_last_recipient() {
     assert_eq!(second.destination, recipient2);
     assert_eq!(second.amount, 667);
 }
+
+#[test]
+fn test_total_distributed_accumulates_across_calls() {
+    let env = Env::default();
+    env.mock_all_auths();
+
+    let admin = Address::generate(&env);
+    let sender = Address::generate(&env);
+    let recipient1 = Address::generate(&env);
+    let recipient2 = Address::generate(&env);
+
+    let (token_contract, token_admin_client, token_client) = create_token_contract(&env, &admin);
+    token_admin_client.mint(&sender, &100_000);
+
+    let contract_id = env.register(RevenueSplitContract, ());
+    let client = RevenueSplitContractClient::new(&env, &contract_id);
+
+    let shares = Vec::from_array(&env, [
+        RecipientShare { destination: recipient1.clone(), basis_points: 5000 },
+        RecipientShare { destination: recipient2.clone(), basis_points: 5000 },
+    ]);
+    client.init(&admin, &shares);
+
+    // First distribution
+    env.ledger().set_sequence_number(1);
+    client.distribute(&token_contract, &sender, &10_000);
+    assert_eq!(client.get_total_distributed(&token_contract), 10_000);
+
+    // Second distribution in a different ledger
+    env.ledger().set_sequence_number(2);
+    client.distribute(&token_contract, &sender, &5_000);
+    assert_eq!(client.get_total_distributed(&token_contract), 15_000);
+
+    // Recipients received correct balances
+    assert_eq!(token_client.balance(&recipient1), 7_500);
+    assert_eq!(token_client.balance(&recipient2), 7_500);
+}
+
+#[test]
+fn test_total_distributed_starts_at_zero() {
+    let env = Env::default();
+    env.mock_all_auths();
+
+    let admin = Address::generate(&env);
+    let (token_contract, _, _) = create_token_contract(&env, &admin);
+
+    let contract_id = env.register(RevenueSplitContract, ());
+    let client = RevenueSplitContractClient::new(&env, &contract_id);
+
+    let shares = Vec::from_array(&env, [
+        RecipientShare { destination: Address::generate(&env), basis_points: 10_000 },
+    ]);
+    client.init(&admin, &shares);
+
+    assert_eq!(client.get_total_distributed(&token_contract), 0);
+}

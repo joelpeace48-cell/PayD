@@ -32,7 +32,7 @@ Traditional international payroll faces significant challenges:
 | Lack of proof                  | Difficult to verify payment delivery    |
 | Contractor/freelancer payments | Many unbanked or prefer digital methods |
 
-## 💡 Core Concept
+## 💡 Core Concepts
 
 Instead of routing through expensive banking infrastructure:
 
@@ -204,6 +204,8 @@ For cloud hosting instructions, see the deployment guide:
 
 - [Vercel + Render Deployment Guide](docs/DEPLOYMENT_GUIDE_VERCEL_RENDER.md)
 - [Staging Environment Known Issues](docs/STAGING_ISSUES.md)
+- [Known Issues](docs/KNOWN_ISSUES.md)
+- [Community (Discord/Slack)](docs/COMMUNITY.md)
 - [Local Contract Bootstrap](docs/LOCAL_CONTRACT_BOOTSTRAP.md)
 - [Filenaming Conventions](docs/FILENAMING_CONVENTIONS.md)
 

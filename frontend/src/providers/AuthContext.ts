@@ -13,7 +13,7 @@ export interface AuthContextType {
   isLoading: boolean;
   login: (provider: 'google' | 'github') => void;
   logout: () => void;
-  setTokenFromCallback: (token: string) => void;
+  setTokenFromCallback: (token: string, refreshToken?: string | null) => void;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);

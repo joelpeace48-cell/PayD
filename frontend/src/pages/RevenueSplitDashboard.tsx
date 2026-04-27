@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 import { ContractErrorPanel } from '../components/ContractErrorPanel';
 import { parseContractError, type ContractErrorDetail } from '../utils/contractErrorParser';
+import { getTxExplorerUrl } from '../utils/stellarExpert';
 import { useNotification } from '../hooks/useNotification';
 import { useWallet } from '../hooks/useWallet';
 import { useWalletSigning } from '../hooks/useWalletSigning';
@@ -464,7 +465,7 @@ export default function RevenueSplitDashboard() {
                       <td className="py-2 pr-4 text-xs">
                         {event.txHash ? (
                           <a
-                            href={`https://stellar.expert/explorer/testnet/tx/${event.txHash}`}
+                            href={getTxExplorerUrl(event.txHash)}
                             target="_blank"
                             rel="noreferrer"
                             className="text-accent"

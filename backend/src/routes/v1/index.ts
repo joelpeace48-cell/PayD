@@ -34,6 +34,7 @@ import ratesRoutes from '../ratesRoutes.js';
 import stellarThrottlingRoutes from '../stellarThrottlingRoutes.js';
 import organizationRoutes from '../organizationRoutes.js';
 import orgAuditRoutes from '../orgAuditRoutes.js';
+import transactionRoutes from '../transactionRoutes.js';
 
 const router = Router();
 
@@ -67,5 +68,6 @@ router.use('/rates', dataRateLimit(), ratesRoutes);
 router.use('/stellar-throttling', apiRateLimit(), stellarThrottlingRoutes);
 router.use('/organizations', dataRateLimit(), organizationRoutes);
 router.use('/org-audit', dataRateLimit(), orgAuditRoutes);
+router.use('/transactions', dataRateLimit(), transactionRoutes);
 
 export default router;

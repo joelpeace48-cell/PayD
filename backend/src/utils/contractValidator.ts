@@ -52,7 +52,8 @@ export function validateNetwork(network: string): boolean {
  * @returns `true` if the value is a positive integer, `false` otherwise
  */
 export function validateDeployedAt(deployedAt: number): boolean {
-  return Number.isInteger(deployedAt) && deployedAt > 0;
+  // Ledger sequence is best-effort metadata; allow `0` when unknown/unset.
+  return Number.isInteger(deployedAt) && deployedAt >= 0;
 }
 
 /**
@@ -90,7 +91,9 @@ export function validateContractEntry(entry: Partial<ContractEntry>): Validation
   if (entry.deployedAt === undefined || entry.deployedAt === null) {
     errors.push('Missing required field: deployedAt');
   } else if (!validateDeployedAt(entry.deployedAt)) {
-    errors.push(`Invalid deployedAt value: ${entry.deployedAt}. Must be a positive integer`);
+    errors.push(
+      `Invalid deployedAt value: ${entry.deployedAt}. Must be a non-negative integer (0 when unknown)`
+    );
   }
 
   return {

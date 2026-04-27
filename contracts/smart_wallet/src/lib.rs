@@ -118,6 +118,71 @@ impl SmartWalletContract {
         Ok(())
     }
 
+    /// Adds a new signer key to the wallet. The new key must not duplicate an
+    /// existing signer. Requires the contract account to authorise (i.e. the
+    /// current threshold of existing signers must sign this call).
+    pub fn add_signer(env: Env, new_signer: SignerKey) -> Result<(), WalletError> {
+        env.current_contract_address().require_auth();
+
+        let mut signers = Self::load_signers(&env)?;
+
+        // Reject duplicates
+        let mut i = 0u32;
+        while i < signers.len() {
+            let s = signers.get(i).ok_or(WalletError::NotInitialized)?;
+            if s == new_signer {
+                return Err(WalletError::DuplicateSigner);
+            }
+            i += 1;
+        }
+
+        signers.push_back(new_signer);
+        env.storage().instance().set(&DataKey::Signers, &signers);
+        Ok(())
+    }
+
+    /// Removes an existing signer key from the wallet. Panics if removing the
+    /// signer would leave fewer signers than the current threshold. Requires
+    /// the contract account to authorise.
+    pub fn remove_signer(env: Env, signer: SignerKey) -> Result<(), WalletError> {
+        env.current_contract_address().require_auth();
+
+        let signers = Self::load_signers(&env)?;
+        let threshold = Self::load_threshold(&env)?;
+
+        // Locate the signer to remove
+        let mut found_index: Option<u32> = None;
+        let mut i = 0u32;
+        while i < signers.len() {
+            let s = signers.get(i).ok_or(WalletError::NotInitialized)?;
+            if s == signer {
+                found_index = Some(i);
+                break;
+            }
+            i += 1;
+        }
+
+        let idx = found_index.ok_or(WalletError::UnknownSigner)?;
+
+        // Must still satisfy threshold after removal
+        if signers.len() - 1 < threshold {
+            return Err(WalletError::InvalidThreshold);
+        }
+
+        let mut new_signers: Vec<SignerKey> = Vec::new(&env);
+        let mut j = 0u32;
+        while j < signers.len() {
+            if j != idx {
+                let s = signers.get(j).ok_or(WalletError::NotInitialized)?;
+                new_signers.push_back(s);
+            }
+            j += 1;
+        }
+
+        env.storage().instance().set(&DataKey::Signers, &new_signers);
+        Ok(())
+    }
+
     fn load_signers(env: &Env) -> Result<Vec<SignerKey>, WalletError> {
         env.storage()
             .instance()

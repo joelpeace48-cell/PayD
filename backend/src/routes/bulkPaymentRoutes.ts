@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { BulkPaymentController } from '../controllers/bulkPaymentController.js';
 import { authenticateJWT } from '../middlewares/auth.js';
 import { authorizeRoles } from '../middlewares/rbac.js';
+import { optionalIpWhitelist } from '../middlewares/ipWhitelist.js';
 
 const router = Router();
 
@@ -13,6 +14,7 @@ const router = Router();
  */
 
 router.use(authenticateJWT);
+router.use(optionalIpWhitelist);
 
 /**
  * @swagger

@@ -270,7 +270,7 @@ export function BulkPaymentStatusTracker({ organizationId }: BulkPaymentStatusTr
             onChange={(e) =>
               setStatusFilter(e.target.value as 'All' | 'Completed' | 'Pending' | 'Failed')
             }
-            className="text-xs bg-surface border border-hi rounded px-2 py-1 text-text outline-none focus:border-accent"
+            className="dropdown-select"
           >
             <option value="All">All Statuses</option>
             <option value="Completed">Completed</option>
@@ -301,6 +301,7 @@ export function BulkPaymentStatusTracker({ organizationId }: BulkPaymentStatusTr
               <tr>
                 <th className="py-2 pr-4">Batch</th>
                 <th className="py-2 pr-4">Status</th>
+                <th className="py-2 pr-4">Progress</th>
                 <th className="py-2 pr-4">Employees</th>
                 <th className="py-2 pr-4">Total</th>
                 <th className="py-2 pr-4">Confirmations</th>
@@ -374,6 +375,9 @@ function FragmentRow({
   onToggleExpand,
   onRetry,
 }: FragmentRowProps) {
+  const progressPercent =
+    employeeCount > 0 ? Math.round((confirmationCount / employeeCount) * 100) : 0;
+
   return (
     <>
       <tr className="border-b border-hi/40">
@@ -387,6 +391,21 @@ function FragmentRow({
               </span>
             ) : null}
           </div>
+        </td>
+        <td className="py-3 pr-4">
+          {run.status === 'processing' || run.status === 'pending' ? (
+            <div className="flex flex-col gap-1 min-w-[100px]">
+              <div className="w-full bg-surface-hi rounded-full h-1.5 overflow-hidden">
+                <div
+                  className="h-full bg-accent transition-all duration-300 rounded-full"
+                  style={{ width: `${progressPercent}%` }}
+                />
+              </div>
+              <span className="text-[10px] text-muted">{progressPercent}%</span>
+            </div>
+          ) : (
+            <span className="text-muted">-</span>
+          )}
         </td>
         <td className="py-3 pr-4">{employeeCount}</td>
         <td className="py-3 pr-4">
@@ -424,7 +443,7 @@ function FragmentRow({
       </tr>
       {expanded ? (
         <tr className="border-b border-hi/40 bg-black/10">
-          <td colSpan={7} className="py-3">
+          <td colSpan={8} className="py-3">
             {!summary ? (
               <p className="text-sm text-muted">Loading recipient statuses...</p>
             ) : (

@@ -336,11 +336,17 @@ export default function TransactionHistory() {
 
                   {item.txHash ? (
                     <div className="mt-4 pt-4 border-t border-hi/50 flex items-center justify-between">
-                      <span className="text-[10px] font-mono text-muted truncate max-w-[70%]">
-                        {item.txHash}
-                      </span>
                       <a
-                        href={`https://stellar.expert/explorer/public/tx/${item.txHash}`}
+                        href={getTxExplorerUrl(item.txHash)}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-[10px] font-mono text-accent hover:underline truncate max-w-[70%]"
+                        title={item.txHash}
+                      >
+                        {item.txHash}
+                      </a>
+                      <a
+                        href={getTxExplorerUrl(item.txHash)}
                         target="_blank"
                         rel="noreferrer"
                         className="text-[10px] font-bold text-accent hover:underline uppercase tracking-widest"

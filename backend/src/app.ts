@@ -161,7 +161,7 @@ app.use((req, res) => {
 app.use(errorLogger);
 
 app.use((err: Error, req: express.Request, res: express.Response, _next: express.NextFunction) => {
-  logger.error('Unhandled error', err);
+  logger.error(`[${req.requestId}] Unhandled error: ${err.message}`, err);
   res.status(500).json({
     ...apiErrorResponse(
       ErrorCodes.INTERNAL_ERROR,
