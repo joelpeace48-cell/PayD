@@ -29,9 +29,7 @@ export const InfoTooltip: React.FC<InfoTooltipProps> = ({
     if (!visible || !tooltipRef.current || !triggerRef.current) return;
 
     const tooltip = tooltipRef.current;
-    const trigger = triggerRef.current;
     const rect = tooltip.getBoundingClientRect();
-    const triggerRect = trigger.getBoundingClientRect();
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
 

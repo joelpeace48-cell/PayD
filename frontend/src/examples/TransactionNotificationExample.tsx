@@ -5,7 +5,7 @@
  * from any component within the EmployerLayout.
  */
 
-import { useTransactionNotifications } from '../contexts/TransactionContext';
+import { useTransactionNotifications } from '../hooks/useTransactionNotifications';
 import { Button } from '@stellar/design-system';
 
 export function TransactionNotificationExample() {
@@ -49,8 +49,8 @@ export function TransactionNotificationExample() {
 /**
  * Usage in your components:
  *
- * 1. Import the hook:
- *    import { useTransactionNotifications } from '../contexts/TransactionContext';
+ * 1. import { useState } from 'react';
+ *    import { useTransactionNotifications } from '../hooks/useTransactionNotifications';
  *
  * 2. Use in your component:
  *    const { addTransaction, updateTransaction } = useTransactionNotifications();

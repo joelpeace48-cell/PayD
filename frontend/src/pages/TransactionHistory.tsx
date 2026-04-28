@@ -23,6 +23,10 @@ function getStatusClass(status: string): string {
   return 'bg-danger/10 text-danger border border-danger/20';
 }
 
+function getTxExplorerUrl(hash: string): string {
+  return `https://stellar.expert/explorer/public/tx/${hash}`;
+}
+
 function TimelineSkeleton() {
   return (
     <div className="space-y-3">
@@ -43,11 +47,9 @@ export default function TransactionHistory() {
   const [showFilters, setShowFilters] = useState(false);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Use filter state hook for managing filters with URL sync and debouncing
   const { filters, debouncedFilters, updateFilter, resetFilters, activeFilterCount } =
     useFilterState();
 
-  // Use transaction history hook for data fetching with TanStack Query
   const { data, isLoading, isLoadingMore, error, hasMore, fetchNextPage, retry, refetch } =
     useTransactionHistory({
       filters: debouncedFilters,
@@ -55,12 +57,10 @@ export default function TransactionHistory() {
       limit: 20,
     });
 
-  // ── WebSocket: atomically update a single item status in-place ─────────
   useEffect(() => {
     if (!socket) return;
 
     const onTransactionUpdate = () => {
-      // Refetch to get the latest data when a transaction updates
       void refetch();
     };
 
@@ -70,7 +70,6 @@ export default function TransactionHistory() {
     };
   }, [socket, refetch]);
 
-  // ── Polling fallback: refresh the first page when socket is down ───────
   useEffect(() => {
     const shouldPoll = !connected || isPollingFallback;
 
@@ -154,7 +153,7 @@ export default function TransactionHistory() {
                   id="search-filter"
                   fieldSize="md"
                   value={filters.search}
-                  onChange={(e: any) => updateFilter('search', e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFilter('search', e.target.value)}
                   placeholder="Tx hash / actor..."
                   addlInputClassName="pl-10"
                 />
@@ -172,7 +171,7 @@ export default function TransactionHistory() {
                 id="status-filter"
                 fieldSize="md"
                 value={filters.status}
-                onChange={(e: any) => updateFilter('status', e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => updateFilter('status', e.target.value)}
               >
                 <option value="">All Statuses</option>
                 <option value="confirmed">Confirmed</option>
@@ -192,7 +191,7 @@ export default function TransactionHistory() {
                 id="employee-filter"
                 fieldSize="md"
                 value={filters.employee}
-                onChange={(e: any) => updateFilter('employee', e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFilter('employee', e.target.value)}
                 placeholder="Name or wallet..."
               />
             </div>
@@ -208,7 +207,7 @@ export default function TransactionHistory() {
                 id="asset-filter"
                 fieldSize="md"
                 value={filters.asset}
-                onChange={(e: any) => updateFilter('asset', e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFilter('asset', e.target.value)}
                 placeholder="USDC, XLM..."
               />
             </div>
@@ -227,7 +226,7 @@ export default function TransactionHistory() {
                   fieldSize="md"
                   type="date"
                   value={filters.startDate}
-                  onChange={(e: any) => updateFilter('startDate', e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFilter('startDate', e.target.value)}
                   addlInputClassName="pl-10"
                 />
               </div>
@@ -247,7 +246,7 @@ export default function TransactionHistory() {
                   fieldSize="md"
                   type="date"
                   value={filters.endDate}
-                  onChange={(e: any) => updateFilter('endDate', e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFilter('endDate', e.target.value)}
                   addlInputClassName="pl-10"
                 />
               </div>

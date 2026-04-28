@@ -1,5 +1,5 @@
 import { Button, Heading, Text } from '@stellar/design-system';
-import { useTransactionNotifications } from '../contexts/TransactionContext';
+import { useTransactionNotifications } from '../hooks/useTransactionNotifications';
 import { Play, CheckCircle, XCircle } from 'lucide-react';
 
 /**

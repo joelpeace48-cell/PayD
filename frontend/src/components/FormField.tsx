@@ -64,7 +64,8 @@ export const FormField: React.FC<FormFieldProps> = ({
 
       <div className={`relative transition-colors ${hasError ? 'border-danger' : 'border-border'}`}>
         {React.isValidElement(children)
-          ? React.cloneElement(children, {
+          ? // eslint-disable-next-line react-x/no-clone-element
+            React.cloneElement(children, {
               id,
               'aria-invalid': hasError,
               'aria-describedby': hasError || helpText ? descriptionId : undefined,

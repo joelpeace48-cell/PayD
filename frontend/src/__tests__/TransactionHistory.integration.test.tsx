@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-
 /**
  * Integration Tests for TransactionHistory Component
  *
@@ -72,11 +70,13 @@ vi.mock('@stellar/design-system', () => ({
   Card: ({ children, addlClassName, ...props }: any) => <div className={addlClassName} {...props}>{children}</div>,
   Heading: ({ children }: any) => <h2>{children}</h2>,
   Text: ({ children }: any) => <p>{children}</p>,
-  Input: ({ fieldSize, addlInputClassName, ...props }: any) => <input {...props} />,
-  Select: ({ children, fieldSize, label, note, ...props }: any) => (
-    <>
-      <select {...props}>{children}</select>
-    </>
+  Input: ({ id, value, onChange, placeholder }: any) => (
+    <input id={id} value={value} onChange={onChange} placeholder={placeholder} data-testid={id} />
+  ),
+  Select: ({ id, value, onChange, children }: any) => (
+    <select id={id} value={value} onChange={onChange} data-testid={id}>
+      {children}
+    </select>
   ),
 }));
 

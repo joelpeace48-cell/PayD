@@ -144,7 +144,7 @@ export function useWalletManager(connectionTimeoutMs: number = 15000) {
         setWalletModalOpen(false);
       }
     },
-    [notifyWalletEvent]
+    [notifyWalletEvent, connectionTimeoutMs]
   );
 
   const connect = useCallback(async (): Promise<string | null> => {

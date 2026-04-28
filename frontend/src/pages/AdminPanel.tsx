@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   ShieldAlert,
   Activity,
@@ -13,7 +13,6 @@ import { useNotification } from '../hooks/useNotification';
 import { useWallet } from '../hooks/useWallet';
 import ContractUpgradeTab from '../components/ContractUpgradeTab';
 import MultisigDetector from '../components/MultisigDetector';
-import { InfoTooltip } from '../components/InfoTooltip';
 import { FormField } from '../components/FormField';
 import { Button, Input, Heading, Text, Card } from '@stellar/design-system';
 
@@ -103,17 +102,11 @@ export default function AdminPanel() {
   const [logsPage, setLogsPage] = useState(1);
   const [logsLoading, setLogsLoading] = useState(false);
 
-  useEffect(() => {
-    if (activeTab === 'logs') {
-      void loadLogs(logsPage);
-    }
-  }, [activeTab, logsPage]);
-
   // -----------------------------------------------------------------------
   // Data fetchers
   // -----------------------------------------------------------------------
 
-  async function loadLogs(page: number) {
+  const loadLogs = useCallback(async (page: number) => {
     setLogsLoading(true);
     try {
       const res = await fetch(`${API_BASE}/freeze/logs?page=${page}&limit=${LOGS_PER_PAGE}`);
@@ -127,7 +120,13 @@ export default function AdminPanel() {
     } finally {
       setLogsLoading(false);
     }
-  }
+  }, [notifyApiError]);
+
+  useEffect(() => {
+    if (activeTab === 'logs') {
+      void loadLogs(logsPage);
+    }
+  }, [activeTab, logsPage, loadLogs]);
 
   // -----------------------------------------------------------------------
   // Action handlers
@@ -275,7 +274,7 @@ export default function AdminPanel() {
                   id="accountTarget"
                   name="accountTarget"
                   value={accountTarget}
-                  onChange={(e: any) => setAccountTarget(e.target.value.trim())}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAccountTarget(e.target.value.trim())}
                   placeholder="G..."
                 />
               </FormField>
@@ -287,7 +286,7 @@ export default function AdminPanel() {
                     id="accountAsset"
                     name="accountAsset"
                     value={accountAsset}
-                    onChange={(e: any) => setAccountAsset(e.target.value.toUpperCase().trim())}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAccountAsset(e.target.value.toUpperCase().trim())}
                   />
                 </FormField>
                 <FormField id="accountSecret" label="Issuer Secret Key" required>
@@ -297,7 +296,7 @@ export default function AdminPanel() {
                     name="accountSecret"
                     type="password"
                     value={accountSecret}
-                    onChange={(e: any) => setAccountSecret(e.target.value.trim())}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAccountSecret(e.target.value.trim())}
                     placeholder="S..."
                   />
                 </FormField>
@@ -309,7 +308,7 @@ export default function AdminPanel() {
                   id="accountReason"
                   name="accountReason"
                   value={accountReason}
-                  onChange={(e: any) => setAccountReason(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAccountReason(e.target.value)}
                   placeholder="e.g. Suspicious activity detected"
                 />
               </FormField>
@@ -357,7 +356,7 @@ export default function AdminPanel() {
                     id="globalAsset"
                     name="globalAsset"
                     value={globalAsset}
-                    onChange={(e: any) => setGlobalAsset(e.target.value.toUpperCase().trim())}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setGlobalAsset(e.target.value.toUpperCase().trim())}
                   />
                 </FormField>
                 <FormField id="globalSecret" label="Issuer Secret Key" required>
@@ -367,7 +366,7 @@ export default function AdminPanel() {
                     name="globalSecret"
                     type="password"
                     value={globalSecret}
-                    onChange={(e: any) => setGlobalSecret(e.target.value.trim())}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setGlobalSecret(e.target.value.trim())}
                     placeholder="S..."
                   />
                 </FormField>
@@ -379,7 +378,7 @@ export default function AdminPanel() {
                   id="globalReason"
                   name="globalReason"
                   value={globalReason}
-                  onChange={(e: any) => setGlobalReason(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setGlobalReason(e.target.value)}
                   placeholder="Mandatory systemic freeze reason"
                 />
               </FormField>
@@ -425,7 +424,7 @@ export default function AdminPanel() {
                   id="statusTarget"
                   name="statusTarget"
                   value={statusTarget}
-                  onChange={(e: any) => setStatusTarget(e.target.value.trim())}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setStatusTarget(e.target.value.trim())}
                   placeholder="G..."
                 />
               </FormField>
@@ -437,7 +436,7 @@ export default function AdminPanel() {
                     id="statusAsset"
                     name="statusAsset"
                     value={statusAsset}
-                    onChange={(e: any) => setStatusAsset(e.target.value.toUpperCase().trim())}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setStatusAsset(e.target.value.toUpperCase().trim())}
                   />
                 </FormField>
                 <FormField id="statusIssuer" label="Asset Issuer (Public Key)" required>
@@ -446,7 +445,7 @@ export default function AdminPanel() {
                     id="statusIssuer"
                     name="statusIssuer"
                     value={statusIssuer}
-                    onChange={(e: any) => setStatusIssuer(e.target.value.trim())}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setStatusIssuer(e.target.value.trim())}
                     placeholder="G..."
                   />
                 </FormField>

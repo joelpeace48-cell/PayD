@@ -1,11 +1,10 @@
-/* eslint-disable @typescript-eslint/require-await */
-/* eslint-disable @typescript-eslint/no-base-to-string */
 /**
  * Unit Tests for Transaction History API Service
  *
  * Tests the normalization functions and API service layer
  */
 
+/* eslint-disable @typescript-eslint/no-base-to-string */
 import { describe, test, expect } from 'vitest';
 import { normalizeAuditRecord, normalizeContractEvent } from '../services/transactionHistoryApi';
 import type { AuditRecord, ContractEvent } from '../types/transactionHistory';

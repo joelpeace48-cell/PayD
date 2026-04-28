@@ -22,9 +22,10 @@ import ErrorFallback from './ErrorFallback';
 import { Breadcrumb } from './Breadcrumb';
 import { NetworkSwitcher } from './NetworkSwitcher';
 import { useNativeXlmBalance } from '../hooks/useNativeXlmBalance';
+import { useTransactionNotifications } from '../hooks/useTransactionNotifications';
 import { useWallet } from '../hooks/useWallet';
 import { TransactionPendingOverlay } from './TransactionPendingOverlay';
-import { TransactionProvider, useTransactionNotifications } from '../contexts/TransactionContext';
+import { TransactionProvider } from '../contexts/TransactionContext';
 
 const ORG_NAME =
   (import.meta.env.VITE_ORG_DISPLAY_NAME as string | undefined)?.trim() || 'Organization';
