@@ -58,4 +58,49 @@ export class DbScalingController {
     const config = service.getPoolConfig();
     res.json({ success: true, data: config });
   }
+
+  /** #289 */
+  async getTableBloat(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const data = await service.getTableBloat();
+      res.json({ success: true, data });
+    } catch (err) {
+      logger.error({ err }, 'Failed to fetch table bloat stats');
+      next(err);
+    }
+  }
+
+  /** #290 */
+  async getCacheHitRate(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const data = await service.getCacheHitRate();
+      res.json({ success: true, data });
+    } catch (err) {
+      logger.error({ err }, 'Failed to fetch cache hit rate');
+      next(err);
+    }
+  }
+
+  /** #291 */
+  async getLongRunningTransactions(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const minSec = Math.max(0, Number(req.query['minDurationSec'] ?? 10));
+      const data = await service.getLongRunningTransactions(minSec);
+      res.json({ success: true, data });
+    } catch (err) {
+      logger.error({ err }, 'Failed to fetch long-running transactions');
+      next(err);
+    }
+  }
+
+  /** #292 */
+  async getVacuumStats(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const data = await service.getVacuumStats();
+      res.json({ success: true, data });
+    } catch (err) {
+      logger.error({ err }, 'Failed to fetch vacuum stats');
+      next(err);
+    }
+  }
 }

@@ -94,4 +94,16 @@ router.get('/index-usage', (req, res, next) => ctrl.getIndexUsage(req, res, next
  */
 router.get('/config', (req, res) => ctrl.getPoolConfig(req, res));
 
+// Issue #289 — table bloat
+router.get('/table-bloat', (req, res, next) => ctrl.getTableBloat(req, res, next));
+
+// Issue #290 — cache hit rate
+router.get('/cache-hit-rate', (req, res, next) => ctrl.getCacheHitRate(req, res, next));
+
+// Issue #291 — long-running transactions (?minDurationSec=10)
+router.get('/long-running-transactions', (req, res, next) => ctrl.getLongRunningTransactions(req, res, next));
+
+// Issue #292 — vacuum / analyse stats
+router.get('/vacuum-stats', (req, res, next) => ctrl.getVacuumStats(req, res, next));
+
 export default router;

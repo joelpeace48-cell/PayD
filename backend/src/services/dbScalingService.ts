@@ -132,4 +132,72 @@ export class DbScalingService {
   getPoolConfig(): { min: number; max: number } {
     return { min: POOL_MIN, max: POOL_MAX };
   }
+
+  /** #289 — Table bloat: dead-tuple ratio per table from pg_stat_user_tables. */
+  async getTableBloat(): Promise<{ table: string; liveRows: number; deadRows: number; bloatRatio: number }[]> {
+    const rows = await this.prisma.$queryRaw<Array<{ relname: string; n_live_tup: bigint; n_dead_tup: bigint }>>`
+      SELECT relname, n_live_tup, n_dead_tup
+      FROM pg_stat_user_tables
+      ORDER BY n_dead_tup DESC
+      LIMIT 20
+    `;
+    return rows.map(r => {
+      const live = Number(r.n_live_tup);
+      const dead = Number(r.n_dead_tup);
+      return { table: r.relname, liveRows: live, deadRows: dead, bloatRatio: live + dead > 0 ? dead / (live + dead) : 0 };
+    });
+  }
+
+  /** #290 — Buffer cache hit rates from pg_statio_user_tables. */
+  async getCacheHitRate(): Promise<{ table: string; heapHitRate: number; idxHitRate: number }[]> {
+    const rows = await this.prisma.$queryRaw<Array<{
+      relname: string; heap_blks_hit: bigint; heap_blks_read: bigint; idx_blks_hit: bigint; idx_blks_read: bigint;
+    }>>`
+      SELECT relname, heap_blks_hit, heap_blks_read, idx_blks_hit, idx_blks_read
+      FROM pg_statio_user_tables
+      ORDER BY relname
+    `;
+    return rows.map(r => {
+      const hh = Number(r.heap_blks_hit), hr = Number(r.heap_blks_read);
+      const ih = Number(r.idx_blks_hit),  ir = Number(r.idx_blks_read);
+      return {
+        table: r.relname,
+        heapHitRate: hh + hr > 0 ? hh / (hh + hr) : 1,
+        idxHitRate:  ih + ir > 0 ? ih / (ih + ir) : 1,
+      };
+    });
+  }
+
+  /** #291 — Long-running transactions from pg_stat_activity. */
+  async getLongRunningTransactions(minDurationSec = 10): Promise<{ pid: number; duration: string; state: string; query: string }[]> {
+    const rows = await this.prisma.$queryRaw<Array<{ pid: number; duration: string; state: string; query: string }>>`
+      SELECT pid,
+             (now() - xact_start)::text AS duration,
+             state,
+             left(query, 120) AS query
+      FROM pg_stat_activity
+      WHERE xact_start IS NOT NULL
+        AND now() - xact_start > (${minDurationSec} || ' seconds')::interval
+        AND state != 'idle'
+      ORDER BY duration DESC
+    `;
+    return rows;
+  }
+
+  /** #292 — Vacuum / analyse timestamps from pg_stat_user_tables. */
+  async getVacuumStats(): Promise<{ table: string; lastVacuum: string | null; lastAutoVacuum: string | null; lastAnalyze: string | null }[]> {
+    const rows = await this.prisma.$queryRaw<Array<{
+      relname: string; last_vacuum: Date | null; last_autovacuum: Date | null; last_analyze: Date | null;
+    }>>`
+      SELECT relname, last_vacuum, last_autovacuum, last_analyze
+      FROM pg_stat_user_tables
+      ORDER BY relname
+    `;
+    return rows.map(r => ({
+      table: r.relname,
+      lastVacuum:     r.last_vacuum    ? r.last_vacuum.toISOString()    : null,
+      lastAutoVacuum: r.last_autovacuum ? r.last_autovacuum.toISOString() : null,
+      lastAnalyze:    r.last_analyze   ? r.last_analyze.toISOString()   : null,
+    }));
+  }
 }
