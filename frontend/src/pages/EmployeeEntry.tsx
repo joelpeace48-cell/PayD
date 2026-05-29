@@ -558,7 +558,7 @@ export default function EmployeeEntry() {
     <div className="flex w-full flex-1 flex-col items-center justify-start px-4 py-6 sm:px-6 lg:px-8">
       <div className="w-full max-w-7xl">
         <div className="mb-8 grid gap-5 xl:grid-cols-[minmax(0,1.05fr)_minmax(18rem,0.95fr)]">
-          <div className="card glass noise border-[var(--border-hi)] p-6 sm:p-8">
+          <div className="card glass noise border-[var(--border-hi)] rounded-[2rem] p-6 sm:p-8">
             <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
               <div className="max-w-2xl">
                 <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-[var(--muted)]">
@@ -579,7 +579,7 @@ export default function EmployeeEntry() {
                 id="tour-add-employee"
                 type="button"
                 onClick={() => setIsAdding(true)}
-                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[var(--accent)] px-5 py-3 text-sm font-bold text-[var(--bg)] shadow-lg shadow-[rgba(74,240,184,0.12)] transition hover:brightness-110"
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--accent)] px-5 py-3 text-sm font-bold text-[var(--bg)] shadow-lg shadow-[rgba(74,240,184,0.12)] transition hover:brightness-110"
               >
                 <UserPlus className="h-4 w-4" aria-hidden />
                 Add employee
@@ -588,19 +588,19 @@ export default function EmployeeEntry() {
           </div>
 
           <div className="grid gap-4 sm:grid-cols-3 xl:grid-cols-1">
-            <div className="card border-[var(--border-hi)] bg-[var(--surface)]/95 p-5">
+            <div className="card rounded-[1.5rem] border-[var(--border-hi)] bg-[var(--surface)]/95 p-5">
               <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[var(--muted)]">
                 Current roster
               </p>
               <p className="mt-2 text-3xl font-black text-[var(--text)]">{employees.length}</p>
             </div>
-            <div className="card border-[var(--border-hi)] bg-[var(--surface)]/95 p-5">
+            <div className="card rounded-[1.5rem] border-[var(--border-hi)] bg-[var(--surface)]/95 p-5">
               <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[var(--muted)]">
                 Active today
               </p>
               <p className="mt-2 text-3xl font-black text-[var(--accent)]">{activeEmployees}</p>
             </div>
-            <div className="card border-[var(--border-hi)] bg-[var(--surface)]/95 p-5">
+            <div className="card rounded-[1.5rem] border-[var(--border-hi)] bg-[var(--surface)]/95 p-5">
               <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[var(--muted)]">
                 Latest onboarding
               </p>
@@ -612,7 +612,7 @@ export default function EmployeeEntry() {
         </div>
 
         {notification ? (
-          <div className="mb-6 rounded-[24px] border border-[color:rgba(74,240,184,0.22)] bg-[color:rgba(74,240,184,0.08)] px-5 py-4">
+          <div className="mb-6 rounded-[2rem] border border-[color:rgba(74,240,184,0.22)] bg-[color:rgba(74,240,184,0.08)] px-5 py-4">
             <p className="text-sm font-semibold text-[var(--text)]">{notification.message}</p>
             <p className="mt-1 text-sm text-[var(--muted)]">
               {notification.employeeName} is now available in the directory and ready for next-step

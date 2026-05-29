@@ -241,62 +241,113 @@ export default function RevenueSplitDashboard() {
   };
 
   return (
-    <div className="flex-1 flex flex-col p-6 lg:p-12 max-w-7xl mx-auto w-full">
-      <div className="mb-8 flex flex-wrap items-end justify-between gap-4 border-b border-zinc-800 pb-6">
-        <div>
-          <h1 className="text-4xl font-black tracking-tight">
-            {t('revenueSplitDashboard.titlePrefix')}{' '}
-            <span className="text-accent">{t('revenueSplitDashboard.titleHighlight')}</span>
-          </h1>
-          <p className="mt-2 font-mono text-sm tracking-wider text-zinc-300 uppercase">
-            {t('revenueSplitDashboard.subtitle')}
-          </p>
+    <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-6 sm:px-6 lg:px-8 lg:py-10">
+      <section className="grid gap-6 rounded-[2rem] border border-[var(--border-hi)] bg-[color-mix(in_srgb,var(--surface)_92%,transparent)] p-6 shadow-2xl shadow-black/10 lg:grid-cols-[minmax(0,1.2fr)_minmax(20rem,0.8fr)] lg:p-8">
+        <div className="space-y-5">
+          <div className="inline-flex w-fit items-center gap-2 rounded-full border border-accent/20 bg-accent/10 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-accent">
+            Revenue operations
+          </div>
+          <div className="space-y-3">
+            <h1 className="text-4xl font-black tracking-tight sm:text-5xl">
+              {t('revenueSplitDashboard.titlePrefix')}{' '}
+              <span className="text-accent">{t('revenueSplitDashboard.titleHighlight')}</span>
+            </h1>
+            <p className="max-w-3xl text-sm leading-6 text-[var(--muted)] sm:text-base">
+              {t('revenueSplitDashboard.subtitle')} Keep allocation visibility, payout history, and
+              contract changes on one screen so finance and operators can stay in sync.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3">
+            {!address ? (
+              <button
+                type="button"
+                onClick={() => {
+                  void connect();
+                }}
+                className="rounded-xl bg-accent px-4 py-2.5 text-sm font-bold text-black"
+              >
+                {t('revenueSplitDashboard.connectWallet')}
+              </button>
+            ) : (
+              <span className="rounded-xl border border-[var(--border-hi)] bg-black/10 px-4 py-2.5 font-mono text-xs text-[var(--muted)]">
+                {t('revenueSplitDashboard.connected')}: {shortAddress}
+              </span>
+            )}
+            <span className="rounded-xl border border-[var(--border-hi)] bg-black/10 px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
+              {preferredStablecoin} settled
+            </span>
+          </div>
         </div>
-        {!address ? (
-          <button
-            type="button"
-            onClick={() => {
-              void connect();
-            }}
-            className="rounded-lg bg-accent px-4 py-2 font-bold text-black"
-          >
-            {t('revenueSplitDashboard.connectWallet')}
-          </button>
-        ) : (
-          <span className="font-mono text-xs text-zinc-400">
-            {t('revenueSplitDashboard.connected')}: {shortAddress}
-          </span>
-        )}
-      </div>
+
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="rounded-2xl border border-[var(--border-hi)] bg-black/10 p-4">
+            <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[var(--muted)]">
+              Allocation total
+            </p>
+            <p
+              className={`mt-2 text-2xl font-black ${isAllocationTotalValid ? 'text-[var(--accent)]' : 'text-red-400'}`}
+            >
+              {totalAllocation.toFixed(2)}%
+            </p>
+            <p className="mt-2 text-sm text-[var(--muted)]">
+              {isAllocationTotalValid ? 'Balanced and ready to submit.' : 'Adjust entries to hit 100%.'}
+            </p>
+          </div>
+          <div className="rounded-2xl border border-[var(--border-hi)] bg-black/10 p-4">
+            <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[var(--muted)]">
+              Allocation rows
+            </p>
+            <p className="mt-2 text-2xl font-black text-[var(--text)]">{allocations.length}</p>
+            <p className="mt-2 text-sm text-[var(--muted)]">Recipients currently configured.</p>
+          </div>
+          <div className="rounded-2xl border border-[var(--border-hi)] bg-black/10 p-4">
+            <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[var(--muted)]">
+              Distributed
+            </p>
+            <p className="mt-2 text-xl font-black text-[var(--text)]">
+              {formatAmount(totalDistributed, preferredStablecoin)}
+            </p>
+            <p className="mt-2 text-sm text-[var(--muted)]">Tracked from indexed payout events.</p>
+          </div>
+          <div className="rounded-2xl border border-[var(--border-hi)] bg-black/10 p-4">
+            <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[var(--muted)]">
+              Events
+            </p>
+            <p className="mt-2 text-2xl font-black text-[var(--text)]">{events.length}</p>
+            <p className="mt-2 text-sm text-[var(--muted)]">Recent distribution history loaded.</p>
+          </div>
+        </div>
+      </section>
 
       {isLoading ? (
-        <div className="mb-6 space-y-4" aria-label="Loading revenue split dashboard" role="status">
+        <div className="space-y-4" aria-label="Loading revenue split dashboard" role="status">
           <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
-            <div className="card glass noise xl:col-span-1 space-y-3 p-4">
+            <div className="card glass noise xl:col-span-1 space-y-3 rounded-[1.5rem] p-4">
               <SkeletonLoader variant="text" width="1/2" />
               <SkeletonLoader variant="chart" height={256} />
               <SkeletonLoader variant="text" count={3} />
             </div>
-            <div className="card glass noise xl:col-span-2 space-y-3 p-4">
+            <div className="card glass noise xl:col-span-2 space-y-3 rounded-[1.5rem] p-4">
               <SkeletonLoader variant="text" width="1/3" />
               <SkeletonLoader variant="card" count={3} height={12} />
             </div>
           </div>
         </div>
       ) : null}
-      {error ? <p className="mb-6 text-sm text-red-400">{error}</p> : null}
+      {error ? <p className="text-sm text-red-400">{error}</p> : null}
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
-        <section className="card glass noise xl:col-span-1">
-          <div className="mb-4 flex items-center justify-between">
+        <section className="card glass noise xl:col-span-1 rounded-[1.5rem]">
+          <div className="mb-4 flex items-center justify-between gap-3">
             <h2 className="text-lg font-bold">{t('revenueSplitDashboard.currentAllocations')}</h2>
-            <span className="rounded-full border border-zinc-700 px-3 py-1 text-[11px] uppercase tracking-wide text-zinc-300">
+            <span className="rounded-full border border-[var(--border-hi)] px-3 py-1 text-[11px] uppercase tracking-wide text-[var(--muted)]">
               On-chain
             </span>
           </div>
 
           {chartData.length === 0 ? (
-            <p className="text-sm text-zinc-300">No allocation data loaded.</p>
+            <p className="text-sm text-[var(--muted)]">No allocation data loaded.</p>
           ) : (
             <div className="space-y-5">
               <div className="h-64">
@@ -321,7 +372,7 @@ export default function RevenueSplitDashboard() {
                       contentStyle={{
                         background: '#0f172a',
                         border: '1px solid rgba(255,255,255,0.1)',
-                        borderRadius: '12px',
+                        borderRadius: '16px',
                       }}
                     />
                   </PieChart>
@@ -332,7 +383,7 @@ export default function RevenueSplitDashboard() {
                 {chartData.map((entry) => (
                   <div
                     key={entry.id}
-                    className="flex items-center justify-between rounded-md border border-zinc-800 px-3 py-2 text-xs"
+                    className="flex items-center justify-between rounded-xl border border-[var(--border-hi)] bg-black/10 px-3 py-2 text-xs"
                   >
                     <div className="flex items-center gap-2">
                       <span
@@ -357,13 +408,13 @@ export default function RevenueSplitDashboard() {
           </p>
         </section>
 
-        <section className="card glass noise xl:col-span-2">
-          <div className="mb-4 flex items-center justify-between">
+        <section className="card glass noise xl:col-span-2 rounded-[1.5rem]">
+          <div className="mb-4 flex items-center justify-between gap-3">
             <h2 className="text-lg font-bold">{t('revenueSplitDashboard.editAllocations')}</h2>
             <button
               type="button"
               onClick={addRecipient}
-              className="rounded-md bg-zinc-800 px-3 py-1.5 text-xs font-semibold hover:bg-zinc-700"
+              className="rounded-xl border border-[var(--border-hi)] bg-black/10 px-3 py-1.5 text-xs font-semibold hover:bg-white/5"
             >
               Add Recipient
             </button>
@@ -377,7 +428,7 @@ export default function RevenueSplitDashboard() {
                   value={entry.recipient}
                   onChange={(event) => setAllocationField(index, 'recipient', event.target.value)}
                   placeholder="Recipient Stellar Address"
-                  className="rounded-lg border border-zinc-800 bg-[#0a0a0c] px-3 py-2 text-xs md:col-span-8"
+                  className="rounded-xl border border-[var(--border-hi)] bg-black/10 px-3 py-2 text-xs md:col-span-8"
                 />
                 <input
                   type="number"
@@ -387,7 +438,7 @@ export default function RevenueSplitDashboard() {
                   max={100}
                   step={0.01}
                   placeholder="%"
-                  className="rounded-lg border border-zinc-800 bg-[#0a0a0c] px-3 py-2 text-xs md:col-span-3"
+                  className="rounded-xl border border-[var(--border-hi)] bg-black/10 px-3 py-2 text-xs md:col-span-3"
                 />
                 <button
                   type="button"
@@ -411,7 +462,7 @@ export default function RevenueSplitDashboard() {
                 void handleSaveAllocations();
               }}
               disabled={isSaving || !isAllocationTotalValid}
-              className="rounded-lg bg-accent px-4 py-2 font-bold text-black disabled:opacity-70"
+              className="rounded-xl bg-accent px-4 py-2 font-bold text-black disabled:opacity-70"
             >
               {isSaving ? t('revenueSplitDashboard.submitting') : t('revenueSplitDashboard.editAllocations')}
             </button>
@@ -422,48 +473,48 @@ export default function RevenueSplitDashboard() {
       </div>
 
       <div className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-3">
-        <section className="card glass noise xl:col-span-1">
+        <section className="card glass noise xl:col-span-1 rounded-[1.5rem]">
           <h2 className="mb-4 text-lg font-bold">{t('revenueSplitDashboard.liveBalances')}</h2>
           {recipientBalances.length === 0 ? (
-            <p className="text-sm text-zinc-300">No recipient distributions available yet.</p>
+            <p className="text-sm text-[var(--muted)]">No recipient distributions available yet.</p>
           ) : (
             <div className="space-y-2">
               {recipientBalances.map((row) => (
                 <div
                   key={row.recipient}
-                  className="flex items-center justify-between border-b border-zinc-800 pb-2"
+                  className="flex items-center justify-between border-b border-[var(--border-hi)] pb-2"
                 >
-                  <span className="max-w-[180px] truncate text-xs text-zinc-300">
+                  <span className="max-w-[180px] truncate text-xs text-[var(--muted)]">
                     {row.recipient}
                   </span>
-                  <span className="text-xs font-bold text-white">
+                  <span className="text-xs font-bold text-[var(--text)]">
                     {formatAmount(row.amount, preferredStablecoin)}
                   </span>
                 </div>
               ))}
             </div>
           )}
-          <p className="mt-4 text-sm text-zinc-200">
+          <p className="mt-4 text-sm text-[var(--text)]">
             Total Distributed:{' '}
             <span className="font-bold">{formatAmount(totalDistributed, preferredStablecoin)}</span>
           </p>
         </section>
 
-        <section className="card glass noise xl:col-span-2">
-          <div className="mb-4 flex items-center justify-between">
+        <section className="card glass noise xl:col-span-2 rounded-[1.5rem]">
+          <div className="mb-4 flex items-center justify-between gap-3">
             <h2 className="text-lg font-bold">{t('revenueSplitDashboard.historicalEvents')}</h2>
             {orgPublicKey ? (
-              <span className="font-mono text-[11px] text-zinc-300">
+              <span className="font-mono text-[11px] text-[var(--muted)]">
                 Org: {orgPublicKey.slice(0, 6)}...{orgPublicKey.slice(-4)}
               </span>
             ) : null}
           </div>
           {events.length === 0 ? (
-            <p className="text-sm text-zinc-300">No backend indexed distribution events found.</p>
+            <p className="text-sm text-[var(--muted)]">No backend indexed distribution events found.</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead className="border-b border-zinc-800 text-left text-zinc-300">
+                <thead className="border-b border-[var(--border-hi)] text-left text-[var(--muted)]">
                   <tr>
                     <th className="py-2 pr-4">Date</th>
                     <th className="py-2 pr-4">Recipient</th>
@@ -474,7 +525,7 @@ export default function RevenueSplitDashboard() {
                 </thead>
                 <tbody>
                   {events.map((event) => (
-                    <tr key={event.id} className="border-b border-zinc-800/50">
+                    <tr key={event.id} className="border-b border-[var(--border-hi)]">
                       <td className="py-2 pr-4 text-xs">
                         {new Date(event.createdAt).toLocaleString()}
                       </td>
