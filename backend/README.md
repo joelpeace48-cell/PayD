@@ -179,6 +179,29 @@ Services (Business Logic)
 | `/cache/stats`       | GET    | Cache statistics |
 | `/cache/clear`       | POST   | Clear cache      |
 
+### FX Rates
+
+| Endpoint               | Method | Purpose                                             |
+| ---------------------- | ------ | --------------------------------------------------- |
+| `/api/v1/rates`        | GET    | Fetch cached ORGUSD/USD-backed fiat rates           |
+| `/api/v1/rates/convert`| GET    | Convert an amount with `amount`, `from`, and `to`   |
+
+Example:
+
+```bash
+curl "http://localhost:3001/api/v1/rates/convert?amount=100&from=ORGUSD&to=KES"
+```
+
+### Notifications
+
+| Endpoint                        | Method | Purpose                                      |
+| ------------------------------- | ------ | -------------------------------------------- |
+| `/api/v1/notifications/payment` | POST   | Trigger email/push notification for payment  |
+| `/api/v1/notifications/history` | GET    | View notification history                    |
+| `/api/v1/notifications/config`  | GET/PUT| View or update organization notification config |
+
+`POST /api/v1/notifications/payment` requires an employer token and accepts `employeeId`, `transactionId`, `transactionHash`, `amount`, `assetCode`, and optional `timestamp`.
+
 ## Query Examples
 
 ### Get Employee Payroll

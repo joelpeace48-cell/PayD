@@ -14,10 +14,25 @@ export interface OrgUsdRatesPayload {
   cacheTtlSeconds: number;
 }
 
+export interface ConversionResult {
+  from: string;
+  to: string;
+  amount: number;
+  convertedAmount: number;
+  rate: number;
+  fetchedAt: string;
+  provider: string;
+}
+
 const memoryFallback: { payload: OrgUsdRatesPayload | null; expiresAt: number } = {
   payload: null,
   expiresAt: 0,
 };
+
+export function clearFxRateMemoryCache(): void {
+  memoryFallback.payload = null;
+  memoryFallback.expiresAt = 0;
+}
 
 function normalizeRates(rates: Record<string, number>): Record<string, number> {
   const out: Record<string, number> = { USD: 1, ORGUSD: 1 };
@@ -136,4 +151,40 @@ export async function getOrgUsdRates(): Promise<OrgUsdRatesPayload> {
     }
     throw error;
   }
+}
+
+export async function convertOrgUsdAmount(
+  amount: number,
+  from: string,
+  to: string
+): Promise<ConversionResult> {
+  if (!Number.isFinite(amount) || amount < 0) {
+    throw new Error('Amount must be a non-negative number');
+  }
+
+  const normalizedFrom = from.trim().toUpperCase();
+  const normalizedTo = to.trim().toUpperCase();
+  const payload = await getOrgUsdRates();
+  const fromRate = payload.rates[normalizedFrom];
+  const toRate = payload.rates[normalizedTo];
+
+  if (!fromRate) {
+    throw new Error(`Unsupported source currency: ${normalizedFrom}`);
+  }
+
+  if (!toRate) {
+    throw new Error(`Unsupported target currency: ${normalizedTo}`);
+  }
+
+  const rate = toRate / fromRate;
+
+  return {
+    from: normalizedFrom,
+    to: normalizedTo,
+    amount,
+    convertedAmount: Number((amount * rate).toFixed(6)),
+    rate,
+    fetchedAt: payload.fetchedAt,
+    provider: payload.provider,
+  };
 }
