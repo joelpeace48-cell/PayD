@@ -200,4 +200,195 @@ export class DbScalingService {
       lastAnalyze:    r.last_analyze   ? r.last_analyze.toISOString()   : null,
     }));
   }
+
+  // ── Part 39 (#284) ───────────────────────────────────────────────────────
+
+  /**
+   * #284a — Lock contention: active waits from pg_locks joined to pg_stat_activity.
+   * Returns rows where one backend is blocking another, showing both PIDs,
+   * the lock type, and the waiting query (truncated to 120 chars).
+   */
+  async getLockContention(): Promise<{
+    waitingPid: number;
+    blockingPid: number;
+    lockType: string;
+    relation: string | null;
+    waitingQuery: string;
+    waitDuration: string | null;
+  }[]> {
+    const rows = await this.prisma.$queryRaw<Array<{
+      waiting_pid: number;
+      blocking_pid: number;
+      locktype: string;
+      relation: string | null;
+      waiting_query: string;
+      wait_duration: string | null;
+    }>>`
+      SELECT
+        blocked.pid                          AS waiting_pid,
+        blocking.pid                         AS blocking_pid,
+        blocked_locks.locktype,
+        blocked_locks.relation::regclass::text AS relation,
+        left(blocked_activity.query, 120)    AS waiting_query,
+        (now() - blocked_activity.query_start)::text AS wait_duration
+      FROM pg_locks AS blocked_locks
+      JOIN pg_stat_activity AS blocked_activity
+        ON blocked_activity.pid = blocked_locks.pid
+      JOIN pg_locks AS blocking_locks
+        ON  blocking_locks.locktype  = blocked_locks.locktype
+        AND blocking_locks.database  IS NOT DISTINCT FROM blocked_locks.database
+        AND blocking_locks.relation  IS NOT DISTINCT FROM blocked_locks.relation
+        AND blocking_locks.page      IS NOT DISTINCT FROM blocked_locks.page
+        AND blocking_locks.tuple     IS NOT DISTINCT FROM blocked_locks.tuple
+        AND blocking_locks.classid   IS NOT DISTINCT FROM blocked_locks.classid
+        AND blocking_locks.objid     IS NOT DISTINCT FROM blocked_locks.objid
+        AND blocking_locks.objsubid  IS NOT DISTINCT FROM blocked_locks.objsubid
+        AND blocking_locks.pid != blocked_locks.pid
+      JOIN pg_stat_activity AS blocking
+        ON blocking.pid = blocking_locks.pid
+      WHERE NOT blocked_locks.granted
+      ORDER BY wait_duration DESC NULLS LAST
+    `;
+    return rows.map(r => ({
+      waitingPid:   r.waiting_pid,
+      blockingPid:  r.blocking_pid,
+      lockType:     r.locktype,
+      relation:     r.relation,
+      waitingQuery: r.waiting_query,
+      waitDuration: r.wait_duration,
+    }));
+  }
+
+  /**
+   * #284b — Unused indexes: user indexes with zero scans since last stats reset.
+   * Useful for identifying bloat from indexes that are never hit by queries.
+   */
+  async getUnusedIndexes(): Promise<{
+    table: string;
+    index: string;
+    indexSizeBytes: number;
+  }[]> {
+    const rows = await this.prisma.$queryRaw<Array<{
+      relname: string;
+      indexrelname: string;
+      index_size: bigint;
+    }>>`
+      SELECT
+        t.relname,
+        i.relname AS indexrelname,
+        pg_relation_size(i.oid) AS index_size
+      FROM pg_index AS ix
+      JOIN pg_class AS t ON t.oid = ix.indrelid
+      JOIN pg_class AS i ON i.oid = ix.indexrelid
+      JOIN pg_stat_user_indexes AS s
+        ON s.indexrelid = ix.indexrelid
+      WHERE s.idx_scan = 0
+        AND NOT ix.indisprimary
+        AND NOT ix.indisunique
+      ORDER BY index_size DESC
+      LIMIT 50
+    `;
+    return rows.map(r => ({
+      table:          r.relname,
+      index:          r.indexrelname,
+      indexSizeBytes: Number(r.index_size),
+    }));
+  }
+
+  // ── Part 40 (#285) ───────────────────────────────────────────────────────
+
+  /**
+   * #285a — Replication lag: bytes behind primary for each standby replica.
+   * Returns an empty array when no replicas are configured (not an error).
+   */
+  async getReplicationLag(): Promise<{
+    clientAddr: string | null;
+    state: string;
+    sentLsn: string;
+    writeLsn: string;
+    flushLsn: string;
+    replayLsn: string;
+    writeLagBytes: number;
+    flushLagBytes: number;
+    replayLagBytes: number;
+  }[]> {
+    const rows = await this.prisma.$queryRaw<Array<{
+      client_addr: string | null;
+      state: string;
+      sent_lsn: string;
+      write_lsn: string;
+      flush_lsn: string;
+      replay_lsn: string;
+      write_lag_bytes: bigint;
+      flush_lag_bytes: bigint;
+      replay_lag_bytes: bigint;
+    }>>`
+      SELECT
+        client_addr::text,
+        state,
+        sent_lsn::text,
+        write_lsn::text,
+        flush_lsn::text,
+        replay_lsn::text,
+        (sent_lsn - write_lsn)  AS write_lag_bytes,
+        (sent_lsn - flush_lsn)  AS flush_lag_bytes,
+        (sent_lsn - replay_lsn) AS replay_lag_bytes
+      FROM pg_stat_replication
+      ORDER BY replay_lag_bytes DESC
+    `;
+    return rows.map(r => ({
+      clientAddr:      r.client_addr,
+      state:           r.state,
+      sentLsn:         r.sent_lsn,
+      writeLsn:        r.write_lsn,
+      flushLsn:        r.flush_lsn,
+      replayLsn:       r.replay_lsn,
+      writeLagBytes:   Number(r.write_lag_bytes),
+      flushLagBytes:   Number(r.flush_lag_bytes),
+      replayLagBytes:  Number(r.replay_lag_bytes),
+    }));
+  }
+
+  /**
+   * #285b — Table sizes: total on-disk size (table + indexes + TOAST) per table,
+   * ordered largest first.  Useful for capacity planning and spotting unexpected growth.
+   */
+  async getTableSizes(limit = 30): Promise<{
+    table: string;
+    totalBytes: number;
+    tableBytes: number;
+    indexBytes: number;
+    toastBytes: number;
+    totalPretty: string;
+  }[]> {
+    const rows = await this.prisma.$queryRaw<Array<{
+      relname: string;
+      total_bytes: bigint;
+      table_bytes: bigint;
+      index_bytes: bigint;
+      toast_bytes: bigint;
+      total_pretty: string;
+    }>>`
+      SELECT
+        relname,
+        pg_total_relation_size(oid)                    AS total_bytes,
+        pg_relation_size(oid)                          AS table_bytes,
+        pg_indexes_size(oid)                           AS index_bytes,
+        COALESCE(pg_total_relation_size(reltoastrelid), 0) AS toast_bytes,
+        pg_size_pretty(pg_total_relation_size(oid))    AS total_pretty
+      FROM pg_class
+      WHERE relkind = 'r'
+        AND relnamespace = (SELECT oid FROM pg_namespace WHERE nspname = 'public')
+      ORDER BY total_bytes DESC
+      LIMIT ${limit}
+    `;
+    return rows.map(r => ({
+      table:       r.relname,
+      totalBytes:  Number(r.total_bytes),
+      tableBytes:  Number(r.table_bytes),
+      indexBytes:  Number(r.index_bytes),
+      toastBytes:  Number(r.toast_bytes),
+      totalPretty: r.total_pretty,
+    }));
+  }
 }

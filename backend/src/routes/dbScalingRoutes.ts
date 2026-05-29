@@ -106,4 +106,94 @@ router.get('/long-running-transactions', (req, res, next) => ctrl.getLongRunning
 // Issue #292 — vacuum / analyse stats
 router.get('/vacuum-stats', (req, res, next) => ctrl.getVacuumStats(req, res, next));
 
+// ── Part 39 (#284) ──────────────────────────────────────────────────────────
+
+/**
+ * @swagger
+ * /api/v1/db-scaling/lock-contention:
+ *   get:
+ *     summary: Active lock-wait chains between database backends (Part 39)
+ *     description: >
+ *       Returns rows from pg_locks + pg_stat_activity where one backend is
+ *       blocking another. An empty array means no lock waits are active.
+ *     tags: [DB Scaling]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Lock contention rows (may be empty)
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/lock-contention', (req, res, next) => ctrl.getLockContention(req, res, next));
+
+/**
+ * @swagger
+ * /api/v1/db-scaling/unused-indexes:
+ *   get:
+ *     summary: Indexes with zero scans since last statistics reset (Part 39)
+ *     description: >
+ *       Lists non-primary, non-unique indexes never used by the query planner.
+ *       These are candidates for removal to reduce write overhead and storage.
+ *     tags: [DB Scaling]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Unused index list
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/unused-indexes', (req, res, next) => ctrl.getUnusedIndexes(req, res, next));
+
+// ── Part 40 (#285) ──────────────────────────────────────────────────────────
+
+/**
+ * @swagger
+ * /api/v1/db-scaling/replication-lag:
+ *   get:
+ *     summary: Streaming replication lag per standby replica (Part 40)
+ *     description: >
+ *       Queries pg_stat_replication for LSN distances between primary and each
+ *       connected standby. Returns an empty array when no replicas are configured.
+ *     tags: [DB Scaling]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Replication lag per replica (may be empty)
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/replication-lag', (req, res, next) => ctrl.getReplicationLag(req, res, next));
+
+/**
+ * @swagger
+ * /api/v1/db-scaling/table-sizes:
+ *   get:
+ *     summary: Per-table disk usage including indexes and TOAST (Part 40)
+ *     description: >
+ *       Returns total on-disk size for each public-schema table broken down into
+ *       heap, index, and TOAST segments. Ordered by total size descending.
+ *     tags: [DB Scaling]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 30
+ *           maximum: 100
+ *         description: Maximum number of tables to return
+ *     responses:
+ *       200:
+ *         description: Table size breakdown
+ *       400:
+ *         description: Invalid limit parameter
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/table-sizes', (req, res, next) => ctrl.getTableSizes(req, res, next));
+
 export default router;

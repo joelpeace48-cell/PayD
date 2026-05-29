@@ -103,4 +103,57 @@ export class DbScalingController {
       next(err);
     }
   }
+
+  // ── Part 39 (#284) ─────────────────────────────────────────────────────
+
+  /** #284a — Lock contention between concurrent backends. */
+  async getLockContention(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const data = await service.getLockContention();
+      res.json({ success: true, data });
+    } catch (err) {
+      logger.error({ err }, 'Failed to fetch lock contention');
+      next(err);
+    }
+  }
+
+  /** #284b — Unused indexes (zero scans since last stats reset). */
+  async getUnusedIndexes(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const data = await service.getUnusedIndexes();
+      res.json({ success: true, data });
+    } catch (err) {
+      logger.error({ err }, 'Failed to fetch unused indexes');
+      next(err);
+    }
+  }
+
+  // ── Part 40 (#285) ─────────────────────────────────────────────────────
+
+  /** #285a — Streaming replication lag per standby replica. */
+  async getReplicationLag(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const data = await service.getReplicationLag();
+      res.json({ success: true, data });
+    } catch (err) {
+      logger.error({ err }, 'Failed to fetch replication lag');
+      next(err);
+    }
+  }
+
+  /** #285b — Per-table disk usage (table + indexes + TOAST). */
+  async getTableSizes(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const limit = Math.min(Number(req.query['limit'] ?? 30), 100);
+      if (isNaN(limit) || limit < 1) {
+        res.status(400).json({ success: false, error: 'limit must be a positive integer' });
+        return;
+      }
+      const data = await service.getTableSizes(limit);
+      res.json({ success: true, data });
+    } catch (err) {
+      logger.error({ err }, 'Failed to fetch table sizes');
+      next(err);
+    }
+  }
 }
