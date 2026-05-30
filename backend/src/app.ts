@@ -25,6 +25,7 @@ import webhookRoutes from './routes/webhookNotificationRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
 import { HealthController } from './controllers/healthController.js';
 import { apiErrorResponse, ErrorCodes } from './utils/apiError.js';
+import { errorHandlerMiddleware } from './middlewares/errorHandlerMiddleware.js';
 
 // Legacy Routes
 import payrollAuditRoutes from './routes/payrollAuditRoutes.js';
@@ -197,15 +198,7 @@ app.use((req, res) => {
 // errorLogger increments Prometheus counters and logs with full context
 app.use(errorLogger);
 
-app.use((err: Error, req: express.Request, res: express.Response, _next: express.NextFunction) => {
-  logger.error(`[${req.requestId}] Unhandled error: ${err.message}`, err);
-  res.status(500).json({
-    ...apiErrorResponse(
-      ErrorCodes.INTERNAL_ERROR,
-      config.nodeEnv === 'development' ? err.message : 'An unexpected error occurred'
-    ),
-    requestId: req.requestId,
-  });
-});
+// Centralized error handler — standardizes ALL error responses (#341)
+app.use(errorHandlerMiddleware);
 
 export default app;
