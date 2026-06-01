@@ -14,7 +14,9 @@ export const require2FA = async (req: Request, res: Response, next: NextFunction
   const token = ((req.headers['x-2fa-token'] as string) || req.body.twoFactorToken || '').trim();
 
   if (!walletAddress) {
-    return res.status(400).json({ error: 'Wallet address required for 2FA (JWT user or senderPublicKey)' });
+    return res
+      .status(400)
+      .json({ error: 'Wallet address required for 2FA (JWT user or senderPublicKey)' });
   }
 
   try {

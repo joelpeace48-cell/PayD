@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { LocalStorageHelper } from '../utils/localStorage';
 
 /**
  * Custom hook for autosaving form data to localStorage with debouncing.
@@ -12,17 +13,25 @@ export function useAutosave<T>(key: string, data: T, delay: number = 1000) {
   const [saving, setSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const isFirstSaveCycle = useRef(true);
+  const storage = useRef(
+    new LocalStorageHelper<T>(key, {
+      version: 1,
+      migrate: (raw) => raw as T,
+    })
+  );
+
+  useEffect(() => {
+    storage.current = new LocalStorageHelper<T>(key, {
+      version: 1,
+      migrate: (raw) => raw as T,
+    });
+  }, [key]);
 
   // Load initial data from local storage if available
   // This helper is intended to be used by the component to initialize its state
   const loadSavedData = useCallback((): T | null => {
     try {
-      const item = window.localStorage.getItem(key);
-      if (item) {
-        const parsed = JSON.parse(item) as unknown;
-        return parsed as T;
-      }
-      return null;
+      return storage.current.get();
     } catch (error) {
       console.error(`Error loading autosave data for key "${key}":`, error);
       return null;
@@ -41,7 +50,7 @@ export function useAutosave<T>(key: string, data: T, delay: number = 1000) {
 
     const handler = setTimeout(() => {
       try {
-        window.localStorage.setItem(key, JSON.stringify(data));
+        storage.current.set(data);
         setLastSaved(new Date());
         setSaving(false);
       } catch (error) {
@@ -56,9 +65,9 @@ export function useAutosave<T>(key: string, data: T, delay: number = 1000) {
   }, [key, data, delay]);
 
   const clearSavedData = useCallback(() => {
-    window.localStorage.removeItem(key);
+    storage.current.remove();
     setLastSaved(null);
-  }, [key]);
+  }, []);
 
   return { saving, lastSaved, loadSavedData, clearSavedData };
 }
