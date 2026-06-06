@@ -69,9 +69,7 @@ describe('SocialLoginButton', () => {
   });
 
   it('applies size variants', () => {
-    const { rerender } = render(
-      <SocialLoginButton provider="google" size="sm" />
-    );
+    const { rerender } = render(<SocialLoginButton provider="google" size="sm" />);
     let button = screen.getByRole('button');
     expect(button).toHaveClass('px-3', 'py-1.5', 'text-xs');
 
@@ -91,9 +89,7 @@ describe('SocialLoginButton', () => {
   });
 
   it('applies custom className', () => {
-    render(
-      <SocialLoginButton provider="google" className="custom-class" />
-    );
+    render(<SocialLoginButton provider="google" className="custom-class" />);
     const button = screen.getByRole('button');
     expect(button).toHaveClass('custom-class');
   });

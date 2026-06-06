@@ -31,7 +31,7 @@ describe('OAuthCallbackHandler', () => {
     render(
       <BrowserRouter>
         <OAuthCallbackHandler onTokenReceived={async () => {}} />
-      </BrowserRouter>,
+      </BrowserRouter>
     );
     expect(screen.getByText('Signing you in')).toBeInTheDocument();
     expect(screen.getByText(/Please wait while we process/)).toBeInTheDocument();
@@ -44,12 +44,13 @@ describe('OAuthCallbackHandler', () => {
     });
 
     // Set token in URL
-    window.location.search = '?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U';
+    window.location.search =
+      '?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U';
 
     render(
       <BrowserRouter>
         <OAuthCallbackHandler onTokenReceived={onTokenReceived} />
-      </BrowserRouter>,
+      </BrowserRouter>
     );
 
     await waitFor(() => {
@@ -60,19 +61,20 @@ describe('OAuthCallbackHandler', () => {
   it('shows success state after token is processed', async () => {
     const onTokenReceived = vi.fn(async () => {});
 
-    window.location.search = '?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U';
+    window.location.search =
+      '?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U';
 
     render(
       <BrowserRouter>
         <OAuthCallbackHandler onTokenReceived={onTokenReceived} />
-      </BrowserRouter>,
+      </BrowserRouter>
     );
 
     await waitFor(
       () => {
-        expect(screen.getByText("Welcome back!")).toBeInTheDocument();
+        expect(screen.getByText('Welcome back!')).toBeInTheDocument();
       },
-      { timeout: 2000 },
+      { timeout: 2000 }
     );
   });
 
@@ -84,7 +86,7 @@ describe('OAuthCallbackHandler', () => {
     render(
       <BrowserRouter>
         <OAuthCallbackHandler onTokenReceived={async () => {}} onError={onError} />
-      </BrowserRouter>,
+      </BrowserRouter>
     );
 
     await waitFor(() => {
@@ -101,7 +103,7 @@ describe('OAuthCallbackHandler', () => {
     render(
       <BrowserRouter>
         <OAuthCallbackHandler onTokenReceived={async () => {}} onError={onError} />
-      </BrowserRouter>,
+      </BrowserRouter>
     );
 
     await waitFor(() => {
@@ -116,7 +118,7 @@ describe('OAuthCallbackHandler', () => {
     render(
       <BrowserRouter>
         <OAuthCallbackHandler onTokenReceived={async () => {}} />
-      </BrowserRouter>,
+      </BrowserRouter>
     );
 
     await waitFor(() => {
@@ -126,14 +128,15 @@ describe('OAuthCallbackHandler', () => {
 
   it('calls onTokenReceived with token', async () => {
     const onTokenReceived = vi.fn(async () => {});
-    const testToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U';
+    const testToken =
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U';
 
     window.location.search = `?token=${testToken}`;
 
     render(
       <BrowserRouter>
         <OAuthCallbackHandler onTokenReceived={onTokenReceived} />
-      </BrowserRouter>,
+      </BrowserRouter>
     );
 
     await waitFor(() => {
@@ -144,12 +147,13 @@ describe('OAuthCallbackHandler', () => {
   it('calls onSuccess when authentication succeeds', async () => {
     const onSuccess = vi.fn();
 
-    window.location.search = '?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U';
+    window.location.search =
+      '?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U';
 
     render(
       <BrowserRouter>
         <OAuthCallbackHandler onTokenReceived={async () => {}} onSuccess={onSuccess} />
-      </BrowserRouter>,
+      </BrowserRouter>
     );
 
     await waitFor(() => {
@@ -165,7 +169,7 @@ describe('OAuthCallbackHandler', () => {
     render(
       <BrowserRouter>
         <OAuthCallbackHandler onTokenReceived={async () => {}} onError={onError} />
-      </BrowserRouter>,
+      </BrowserRouter>
     );
 
     await waitFor(() => {
@@ -179,7 +183,7 @@ describe('OAuthCallbackHandler', () => {
     render(
       <BrowserRouter>
         <OAuthCallbackHandler onTokenReceived={async () => {}} />
-      </BrowserRouter>,
+      </BrowserRouter>
     );
 
     await waitFor(() => {
@@ -193,7 +197,7 @@ describe('OAuthCallbackHandler', () => {
     render(
       <BrowserRouter>
         <OAuthCallbackHandler onTokenReceived={async () => {}} />
-      </BrowserRouter>,
+      </BrowserRouter>
     );
 
     await waitFor(() => {
@@ -202,12 +206,13 @@ describe('OAuthCallbackHandler', () => {
   });
 
   it('has accessible status announcements', async () => {
-    window.location.search = '?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U';
+    window.location.search =
+      '?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U';
 
     const { container } = render(
       <BrowserRouter>
         <OAuthCallbackHandler onTokenReceived={async () => {}} />
-      </BrowserRouter>,
+      </BrowserRouter>
     );
 
     // Check for status region with aria-live
@@ -220,11 +225,8 @@ describe('OAuthCallbackHandler', () => {
 
     const { container } = render(
       <BrowserRouter>
-        <OAuthCallbackHandler
-          onTokenReceived={async () => {}}
-          className="custom-class"
-        />
-      </BrowserRouter>,
+        <OAuthCallbackHandler onTokenReceived={async () => {}} className="custom-class" />
+      </BrowserRouter>
     );
 
     const wrapper = container.querySelector('.custom-class');

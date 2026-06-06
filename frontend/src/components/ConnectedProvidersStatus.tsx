@@ -41,10 +41,10 @@ const providerConfig = {
 
 /**
  * ConnectedProvidersStatus Component
- * 
+ *
  * Displays the connection status of social providers in a compact format.
  * Shows which providers are connected and their details.
- * 
+ *
  * Features:
  * - Visual status indicators (connected/disconnected)
  * - Provider-specific icons and colors
@@ -52,7 +52,7 @@ const providerConfig = {
  * - Connection date information
  * - Responsive layout
  * - Full accessibility support
- * 
+ *
  * @example
  * ```tsx
  * <ConnectedProvidersStatus
@@ -90,9 +90,7 @@ export const ConnectedProvidersStatus: React.FC<ConnectedProvidersStatusProps> =
         const statusColor = provider.isConnected
           ? 'bg-green-500/20 border-green-500/30'
           : 'bg-gray-500/10 border-gray-500/20';
-        const statusTextColor = provider.isConnected
-          ? 'text-green-400'
-          : 'text-gray-400';
+        const statusTextColor = provider.isConnected ? 'text-green-400' : 'text-gray-400';
 
         return (
           <div
@@ -106,14 +104,14 @@ export const ConnectedProvidersStatus: React.FC<ConnectedProvidersStatusProps> =
 
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
-                  <p className={`${textSize} font-semibold text-[var(--text)]`}>
-                    {config.name}
-                  </p>
+                  <p className={`${textSize} font-semibold text-[var(--text)]`}>{config.name}</p>
                   <span
                     className={`inline-flex items-center ${textSize} font-medium ${statusTextColor}`}
                     role="img"
                     aria-label={
-                      provider.isConnected ? `${config.name} connected` : `${config.name} not connected`
+                      provider.isConnected
+                        ? `${config.name} connected`
+                        : `${config.name} not connected`
                     }
                   >
                     <StatusIcon size={14} aria-hidden="true" />

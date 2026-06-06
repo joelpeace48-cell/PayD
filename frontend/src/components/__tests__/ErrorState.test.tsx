@@ -10,28 +10,19 @@ describe('ErrorState', () => {
   });
 
   it('renders message when provided', () => {
-    render(
-      <ErrorState
-        title="Error"
-        message="Failed to load data. Please try again."
-      />,
-    );
+    render(<ErrorState title="Error" message="Failed to load data. Please try again." />);
     expect(screen.getByText('Failed to load data. Please try again.')).toBeInTheDocument();
   });
 
   it('renders error code when provided', () => {
-    render(
-      <ErrorState title="Error" code="404" />,
-    );
+    render(<ErrorState title="Error" code="404" />);
     expect(screen.getByText(/Error: 404/)).toBeInTheDocument();
   });
 
   it('renders retry button with onRetry callback', async () => {
     const user = userEvent.setup();
     const onRetry = vi.fn();
-    render(
-      <ErrorState title="Error" onRetry={onRetry} />,
-    );
+    render(<ErrorState title="Error" onRetry={onRetry} />);
 
     const retryButton = screen.getByRole('button', { name: 'Try Again' });
     await user.click(retryButton);
@@ -39,24 +30,12 @@ describe('ErrorState', () => {
   });
 
   it('shows loading state when retrying', () => {
-    render(
-      <ErrorState
-        title="Error"
-        onRetry={() => {}}
-        isRetrying={true}
-      />,
-    );
+    render(<ErrorState title="Error" onRetry={() => {}} isRetrying={true} />);
     expect(screen.getByText('Retrying...')).toBeInTheDocument();
   });
 
   it('disables retry button when isRetrying is true', () => {
-    render(
-      <ErrorState
-        title="Error"
-        onRetry={() => {}}
-        isRetrying={true}
-      />,
-    );
+    render(<ErrorState title="Error" onRetry={() => {}} isRetrying={true} />);
     const retryButton = screen.getByRole('button', { name: 'Retrying...' });
     expect(retryButton).toBeDisabled();
   });
@@ -64,12 +43,7 @@ describe('ErrorState', () => {
   it('renders action button when provided', async () => {
     const user = userEvent.setup();
     const onAction = vi.fn();
-    render(
-      <ErrorState
-        title="Error"
-        action={{ label: 'Contact Support', onClick: onAction }}
-      />,
-    );
+    render(<ErrorState title="Error" action={{ label: 'Contact Support', onClick: onAction }} />);
 
     const actionButton = screen.getByRole('button', { name: 'Contact Support' });
     await user.click(actionButton);
@@ -82,9 +56,7 @@ describe('ErrorState', () => {
   });
 
   it('applies custom className', () => {
-    const { container } = render(
-      <ErrorState title="Error" className="custom-class" />,
-    );
+    const { container } = render(<ErrorState title="Error" className="custom-class" />);
     const errorState = container.firstChild;
     expect(errorState).toHaveClass('custom-class');
   });

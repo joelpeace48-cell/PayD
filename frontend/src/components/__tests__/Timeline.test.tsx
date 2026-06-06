@@ -59,9 +59,7 @@ describe('Timeline', () => {
   });
 
   it('applies custom className', () => {
-    const { container } = render(
-      <Timeline items={mockItems} className="custom-class" />,
-    );
+    const { container } = render(<Timeline items={mockItems} className="custom-class" />);
     // For vertical layout, className is applied directly; for horizontal, it's on the wrapper div
     const firstChild = container.firstChild;
     expect(firstChild).toHaveClass('custom-class');
@@ -91,7 +89,7 @@ describe('Timeline', () => {
     render(<Timeline items={mockItems} />);
     const list = screen.getByRole('list');
     expect(list.tagName).toBe('OL');
-    
+
     const items = screen.getAllByRole('listitem');
     expect(items).toHaveLength(3);
   });

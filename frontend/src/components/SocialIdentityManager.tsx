@@ -56,10 +56,10 @@ const providerConfig = {
 
 /**
  * SocialIdentityManager Component
- * 
+ *
  * Manages linked social accounts for a user.
  * Allows viewing, linking, and unlinking social providers.
- * 
+ *
  * Features:
  * - Display all linked social identities
  * - Link new social providers
@@ -67,7 +67,7 @@ const providerConfig = {
  * - Mark primary account
  * - Account details (email, name, connection date)
  * - Full accessibility support
- * 
+ *
  * @example
  * ```tsx
  * <SocialIdentityManager
@@ -88,18 +88,16 @@ export const SocialIdentityManager: React.FC<SocialIdentityManagerProps> = ({
   const [confirmUnlink, setConfirmUnlink] = useState<SocialProvider | null>(null);
 
   const linkedProviders = identities.map((id) => id.provider);
-  const availableProviders: SocialProvider[] = (
-    ['google', 'github'] as const
-  ).filter((p) => !linkedProviders.includes(p));
+  const availableProviders: SocialProvider[] = (['google', 'github'] as const).filter(
+    (p) => !linkedProviders.includes(p)
+  );
 
   return (
     <div className={`space-y-6 ${className}`}>
       {/* Linked Identities Section */}
       {identities.length > 0 && (
         <div>
-          <h3 className="text-sm font-semibold text-[var(--text)] mb-4">
-            Connected Accounts
-          </h3>
+          <h3 className="text-sm font-semibold text-[var(--text)] mb-4">Connected Accounts</h3>
 
           <div className="space-y-3">
             {identities.map((identity) => {
@@ -118,9 +116,7 @@ export const SocialIdentityManager: React.FC<SocialIdentityManagerProps> = ({
 
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <h4 className="text-sm font-semibold text-[var(--text)]">
-                          {config.name}
-                        </h4>
+                        <h4 className="text-sm font-semibold text-[var(--text)]">{config.name}</h4>
                         {identity.isPrimary && (
                           <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-[var(--accent)]/20 text-[var(--accent)]">
                             Primary
@@ -166,7 +162,9 @@ export const SocialIdentityManager: React.FC<SocialIdentityManagerProps> = ({
                         disabled={isLoading || identities.length === 1}
                         className="p-2 text-[var(--muted)] hover:text-red-400 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         aria-label={`Unlink ${config.name} account`}
-                        title={identities.length === 1 ? 'Keep at least one account linked' : undefined}
+                        title={
+                          identities.length === 1 ? 'Keep at least one account linked' : undefined
+                        }
                         type="button"
                       >
                         <Trash2 size={18} aria-hidden="true" />

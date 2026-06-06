@@ -19,7 +19,9 @@ describe('StatusBadge', () => {
   });
 
   it('applies correct size classes', () => {
-    const { container, rerender } = render(<StatusBadge variant="success" label="Test" size="sm" />);
+    const { container, rerender } = render(
+      <StatusBadge variant="success" label="Test" size="sm" />
+    );
 
     let badge = container.querySelector('[role="status"]');
     expect(badge).toHaveClass('text-xs', 'px-2', 'py-1');
@@ -41,7 +43,7 @@ describe('StatusBadge', () => {
 
   it('applies custom className', () => {
     const { container } = render(
-      <StatusBadge variant="success" label="Test" className="custom-class" />,
+      <StatusBadge variant="success" label="Test" className="custom-class" />
     );
     const badge = container.querySelector('[role="status"]');
     expect(badge).toHaveClass('custom-class');

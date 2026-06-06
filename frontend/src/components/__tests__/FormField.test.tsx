@@ -7,7 +7,7 @@ describe('FormField', () => {
     render(
       <FormField id="email" label="Email Address">
         <input type="email" />
-      </FormField>,
+      </FormField>
     );
     expect(screen.getByLabelText('Email Address')).toBeInTheDocument();
   });
@@ -16,7 +16,7 @@ describe('FormField', () => {
     render(
       <FormField id="name" label="Name" required={true}>
         <input type="text" />
-      </FormField>,
+      </FormField>
     );
     expect(screen.getByText('*')).toBeInTheDocument();
     expect(screen.getByText('(required)')).toBeInTheDocument();
@@ -26,7 +26,7 @@ describe('FormField', () => {
     render(
       <FormField id="middle" label="Middle Name" optional={true}>
         <input type="text" />
-      </FormField>,
+      </FormField>
     );
     expect(screen.getByText('(optional)')).toBeInTheDocument();
   });
@@ -35,7 +35,7 @@ describe('FormField', () => {
     render(
       <FormField id="email" label="Email" error="Invalid email format">
         <input type="email" />
-      </FormField>,
+      </FormField>
     );
     expect(screen.getByText('Invalid email format')).toBeInTheDocument();
     expect(screen.getByRole('alert')).toBeInTheDocument();
@@ -163,7 +163,7 @@ describe('FormField', () => {
     const { container } = render(
       <FormField id="email" label="Email" isValid={true}>
         <input type="email" />
-      </FormField>,
+      </FormField>
     );
     const checkIcon = container.querySelector('[role="status"]');
     expect(checkIcon).toBeInTheDocument();
@@ -171,28 +171,18 @@ describe('FormField', () => {
 
   it('displays character count', () => {
     render(
-      <FormField
-        id="bio"
-        label="Bio"
-        maxLength={200}
-        currentLength={85}
-      >
+      <FormField id="bio" label="Bio" maxLength={200} currentLength={85}>
         <textarea />
-      </FormField>,
+      </FormField>
     );
     expect(screen.getByText('85 / 200 characters')).toBeInTheDocument();
   });
 
   it('shows warning style when character count exceeds 80%', () => {
     render(
-      <FormField
-        id="bio"
-        label="Bio"
-        maxLength={100}
-        currentLength={85}
-      >
+      <FormField id="bio" label="Bio" maxLength={100} currentLength={85}>
         <textarea />
-      </FormField>,
+      </FormField>
     );
     const charCount = screen.getByText('85 / 100 characters');
     expect(charCount).toHaveClass('text-amber-400');
@@ -200,14 +190,9 @@ describe('FormField', () => {
 
   it('does not show help text when error is present', () => {
     render(
-      <FormField
-        id="email"
-        label="Email"
-        error="Invalid"
-        helpText="Enter a valid email"
-      >
+      <FormField id="email" label="Email" error="Invalid" helpText="Enter a valid email">
         <input type="email" />
-      </FormField>,
+      </FormField>
     );
     expect(screen.queryByText('Enter a valid email')).not.toBeInTheDocument();
   });
@@ -216,7 +201,7 @@ describe('FormField', () => {
     const { container } = render(
       <FormField id="bio" label="Bio" maxLength={200}>
         <textarea />
-      </FormField>,
+      </FormField>
     );
     const textarea = container.querySelector('textarea');
     expect(textarea).toHaveAttribute('maxLength', '200');

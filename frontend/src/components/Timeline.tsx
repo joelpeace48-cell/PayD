@@ -62,7 +62,11 @@ const statusLineColors: Record<TimelineItemStatus, string> = {
   error: 'bg-red-500',
 };
 
-export const Timeline: React.FC<TimelineProps> = ({ items, direction = 'vertical', className = '' }) => {
+export const Timeline: React.FC<TimelineProps> = ({
+  items,
+  direction = 'vertical',
+  className = '',
+}) => {
   if (direction === 'horizontal') {
     return (
       <div className={`w-full ${className}`}>

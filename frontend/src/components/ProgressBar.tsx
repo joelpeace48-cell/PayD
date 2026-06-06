@@ -73,7 +73,9 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
         </div>
       )}
 
-      <div className={`w-full overflow-hidden rounded-full bg-[var(--surface)] ${sizeStyles[size]}`}>
+      <div
+        className={`w-full overflow-hidden rounded-full bg-[var(--surface)] ${sizeStyles[size]}`}
+      >
         <div
           className={`h-full transition-all duration-500 ease-out ${variantStyles[variant]} ${
             animated && !isComplete ? 'animate-pulse' : ''

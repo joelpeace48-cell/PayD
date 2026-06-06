@@ -29,10 +29,10 @@ type CallbackState = 'loading' | 'success' | 'error' | 'validating';
 
 /**
  * OAuthCallbackHandler Component
- * 
+ *
  * Handles OAuth2 callback processing.
  * Validates tokens, manages loading/error states, and redirects on success.
- * 
+ *
  * Features:
  * - Automatic token extraction from URL
  * - Token validation
@@ -41,7 +41,7 @@ type CallbackState = 'loading' | 'success' | 'error' | 'validating';
  * - Success confirmation
  * - Automatic redirect after success
  * - Full accessibility support
- * 
+ *
  * @example
  * ```tsx
  * <OAuthCallbackHandler
@@ -125,26 +125,19 @@ export const OAuthCallbackHandler: React.FC<OAuthCallbackHandlerProps> = ({
     return (
       <div className={`flex flex-col items-center justify-center min-h-screen gap-4 ${className}`}>
         <div className="p-6 rounded-full bg-[var(--accent)]/10 border border-[var(--accent)]/20">
-          <Loader2
-            size={32}
-            className="text-[var(--accent)] animate-spin"
-            aria-hidden="true"
-          />
+          <Loader2 size={32} className="text-[var(--accent)] animate-spin" aria-hidden="true" />
         </div>
         <div className="text-center">
           <h2 className="text-lg font-semibold text-[var(--text)]">
             {state === 'validating' ? 'Verifying your identity' : 'Signing you in'}
           </h2>
-          <p className="text-sm text-[var(--muted)] mt-2">Please wait while we process your authentication...</p>
+          <p className="text-sm text-[var(--muted)] mt-2">
+            Please wait while we process your authentication...
+          </p>
         </div>
 
         {/* Accessible loading announcement */}
-        <div
-          role="status"
-          aria-live="polite"
-          aria-atomic="true"
-          className="sr-only"
-        >
+        <div role="status" aria-live="polite" aria-atomic="true" className="sr-only">
           {state === 'validating'
             ? 'Verifying your identity. Please wait.'
             : 'Signing you in. Please wait.'}
@@ -157,24 +150,17 @@ export const OAuthCallbackHandler: React.FC<OAuthCallbackHandlerProps> = ({
     return (
       <div className={`flex flex-col items-center justify-center min-h-screen gap-4 ${className}`}>
         <div className="p-6 rounded-full bg-green-500/10 border border-green-500/20">
-          <CheckCircle
-            size={32}
-            className="text-green-400"
-            aria-hidden="true"
-          />
+          <CheckCircle size={32} className="text-green-400" aria-hidden="true" />
         </div>
         <div className="text-center">
           <h2 className="text-lg font-semibold text-[var(--text)]">Welcome back!</h2>
-          <p className="text-sm text-[var(--muted)] mt-2">You're being redirected to your dashboard...</p>
+          <p className="text-sm text-[var(--muted)] mt-2">
+            You're being redirected to your dashboard...
+          </p>
         </div>
 
         {/* Accessible success announcement */}
-        <div
-          role="status"
-          aria-live="polite"
-          aria-atomic="true"
-          className="sr-only"
-        >
+        <div role="status" aria-live="polite" aria-atomic="true" className="sr-only">
           Authentication successful. Redirecting you now.
         </div>
       </div>
@@ -185,11 +171,7 @@ export const OAuthCallbackHandler: React.FC<OAuthCallbackHandlerProps> = ({
     return (
       <div className={`flex flex-col items-center justify-center min-h-screen gap-4 ${className}`}>
         <div className="p-6 rounded-full bg-red-500/10 border border-red-500/20">
-          <AlertCircle
-            size={32}
-            className="text-red-400"
-            aria-hidden="true"
-          />
+          <AlertCircle size={32} className="text-red-400" aria-hidden="true" />
         </div>
         <div className="text-center max-w-md">
           <h2 className="text-lg font-semibold text-[var(--text)]">Authentication failed</h2>
@@ -214,12 +196,7 @@ export const OAuthCallbackHandler: React.FC<OAuthCallbackHandlerProps> = ({
         </div>
 
         {/* Accessible error announcement */}
-        <div
-          role="alert"
-          aria-live="assertive"
-          aria-atomic="true"
-          className="sr-only"
-        >
+        <div role="alert" aria-live="assertive" aria-atomic="true" className="sr-only">
           {error}
         </div>
       </div>
@@ -239,10 +216,8 @@ function isValidJWT(token: string): boolean {
 function getErrorMessage(errorCode: string): string {
   const errorMessages: Record<string, string> = {
     access_denied: 'You denied access to your account. Please try again.',
-    invalid_scope:
-      'The authentication request had invalid permissions. Please contact support.',
-    server_error:
-      'The authentication server encountered an error. Please try again later.',
+    invalid_scope: 'The authentication request had invalid permissions. Please contact support.',
+    server_error: 'The authentication server encountered an error. Please try again later.',
     timeout: 'Authentication request timed out. Please try again.',
     no_token: 'No authentication token received. Please try again.',
     invalid_token: 'Invalid authentication token. Please try again.',

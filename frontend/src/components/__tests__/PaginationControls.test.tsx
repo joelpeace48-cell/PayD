@@ -6,15 +6,13 @@ import userEvent from '@testing-library/user-event';
 describe('PaginationControls', () => {
   it('does not render for single page', () => {
     const { container } = render(
-      <PaginationControls currentPage={1} totalPages={1} onPageChange={() => {}} />,
+      <PaginationControls currentPage={1} totalPages={1} onPageChange={() => {}} />
     );
     expect(container.firstChild).toBeNull();
   });
 
   it('displays current page and total pages', () => {
-    render(
-      <PaginationControls currentPage={2} totalPages={5} onPageChange={() => {}} />,
-    );
+    render(<PaginationControls currentPage={2} totalPages={5} onPageChange={() => {}} />);
     expect(screen.getByText('2')).toBeInTheDocument();
     expect(screen.getByText('Page')).toBeInTheDocument();
     expect(screen.getByText('5')).toBeInTheDocument();
@@ -23,9 +21,7 @@ describe('PaginationControls', () => {
   it('calls onPageChange with correct page number', async () => {
     const user = userEvent.setup();
     const onPageChange = vi.fn();
-    render(
-      <PaginationControls currentPage={1} totalPages={5} onPageChange={onPageChange} />,
-    );
+    render(<PaginationControls currentPage={1} totalPages={5} onPageChange={onPageChange} />);
 
     const page2Button = screen.getByRole('button', { name: /Go to page 2/i });
     await user.click(page2Button);
@@ -33,17 +29,13 @@ describe('PaginationControls', () => {
   });
 
   it('disables previous button on first page', () => {
-    render(
-      <PaginationControls currentPage={1} totalPages={5} onPageChange={() => {}} />,
-    );
+    render(<PaginationControls currentPage={1} totalPages={5} onPageChange={() => {}} />);
     const prevButton = screen.getByLabelText('Go to previous page');
     expect(prevButton).toBeDisabled();
   });
 
   it('disables next button on last page', () => {
-    render(
-      <PaginationControls currentPage={5} totalPages={5} onPageChange={() => {}} />,
-    );
+    render(<PaginationControls currentPage={5} totalPages={5} onPageChange={() => {}} />);
     const nextButton = screen.getByLabelText('Go to next page');
     expect(nextButton).toBeDisabled();
   });
@@ -55,7 +47,7 @@ describe('PaginationControls', () => {
         totalPages={5}
         onPageChange={() => {}}
         showFirstLast={true}
-      />,
+      />
     );
     expect(screen.getByLabelText('Go to first page')).toBeInTheDocument();
     expect(screen.getByLabelText('Go to last page')).toBeInTheDocument();
@@ -68,7 +60,7 @@ describe('PaginationControls', () => {
         totalPages={5}
         onPageChange={() => {}}
         showFirstLast={false}
-      />,
+      />
     );
     expect(screen.queryByLabelText('Go to first page')).not.toBeInTheDocument();
     expect(screen.queryByLabelText('Go to last page')).not.toBeInTheDocument();
@@ -81,28 +73,21 @@ describe('PaginationControls', () => {
         totalPages={10}
         onPageChange={() => {}}
         maxVisiblePages={5}
-      />,
+      />
     );
     const ellipses = screen.getAllByText('…');
     expect(ellipses.length).toBeGreaterThan(0);
   });
 
   it('marks current page with aria-current', () => {
-    render(
-      <PaginationControls currentPage={3} totalPages={5} onPageChange={() => {}} />,
-    );
+    render(<PaginationControls currentPage={3} totalPages={5} onPageChange={() => {}} />);
     const currentPageButton = screen.getByLabelText('Go to page 3');
     expect(currentPageButton).toHaveAttribute('aria-current', 'page');
   });
 
   it('disables all buttons when disabled prop is true', () => {
     render(
-      <PaginationControls
-        currentPage={2}
-        totalPages={5}
-        onPageChange={() => {}}
-        disabled={true}
-      />,
+      <PaginationControls currentPage={2} totalPages={5} onPageChange={() => {}} disabled={true} />
     );
     const buttons = screen.getAllByRole('button');
     buttons.forEach((button) => {
@@ -111,9 +96,7 @@ describe('PaginationControls', () => {
   });
 
   it('has correct navigation semantic role', () => {
-    render(
-      <PaginationControls currentPage={1} totalPages={5} onPageChange={() => {}} />,
-    );
+    render(<PaginationControls currentPage={1} totalPages={5} onPageChange={() => {}} />);
     expect(screen.getByRole('navigation')).toBeInTheDocument();
   });
 });

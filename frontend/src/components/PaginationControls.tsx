@@ -63,7 +63,7 @@ export const PaginationControls: React.FC<PaginationControlsProps> = ({
         onPageChange(page);
       }
     },
-    [onPageChange, totalPages, disabled],
+    [onPageChange, totalPages, disabled]
   );
 
   if (totalPages <= 1) {
@@ -80,10 +80,7 @@ export const PaginationControls: React.FC<PaginationControlsProps> = ({
   const iconButtonClass = `p-2 rounded-lg border border-[var(--border-hi)] text-[var(--text)] hover:bg-[var(--surface)] transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/50 disabled:opacity-50 disabled:cursor-not-allowed`;
 
   return (
-    <nav
-      className={`flex items-center justify-center gap-2 ${className}`}
-      aria-label="Pagination"
-    >
+    <nav className={`flex items-center justify-center gap-2 ${className}`} aria-label="Pagination">
       {showFirstLast && (
         <button
           onClick={() => handlePageChange(1)}

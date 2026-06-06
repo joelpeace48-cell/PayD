@@ -20,7 +20,7 @@ describe('SocialIdentityManager', () => {
         identities={mockIdentities}
         onLinkProvider={() => {}}
         onUnlinkProvider={() => {}}
-      />,
+      />
     );
     expect(screen.getByText('Connected Accounts')).toBeInTheDocument();
     expect(screen.getByText('Google')).toBeInTheDocument();
@@ -33,7 +33,7 @@ describe('SocialIdentityManager', () => {
         identities={mockIdentities}
         onLinkProvider={() => {}}
         onUnlinkProvider={() => {}}
-      />,
+      />
     );
     expect(screen.getByText('Primary')).toBeInTheDocument();
   });
@@ -44,15 +44,13 @@ describe('SocialIdentityManager', () => {
         identities={mockIdentities}
         onLinkProvider={() => {}}
         onUnlinkProvider={() => {}}
-      />,
+      />
     );
     expect(screen.getByText(/Connected/)).toBeInTheDocument();
   });
 
   it('shows available providers to link', () => {
-    render(
-      <SocialIdentityManager identities={mockIdentities} onLinkProvider={() => {}} />,
-    );
+    render(<SocialIdentityManager identities={mockIdentities} onLinkProvider={() => {}} />);
     expect(screen.getByText('Link Additional Accounts')).toBeInTheDocument();
     expect(screen.getByText(/Link GitHub/)).toBeInTheDocument();
   });
@@ -60,12 +58,7 @@ describe('SocialIdentityManager', () => {
   it('calls onLinkProvider when link button clicked', async () => {
     const user = userEvent.setup();
     const onLinkProvider = vi.fn();
-    render(
-      <SocialIdentityManager
-        identities={mockIdentities}
-        onLinkProvider={onLinkProvider}
-      />,
-    );
+    render(<SocialIdentityManager identities={mockIdentities} onLinkProvider={onLinkProvider} />);
 
     const linkButton = screen.getByLabelText('Link GitHub account');
     await user.click(linkButton);
@@ -77,12 +70,7 @@ describe('SocialIdentityManager', () => {
       { provider: 'google' as const, email: 'user@gmail.com' },
       { provider: 'github' as const, email: 'user@github.com', isPrimary: true },
     ];
-    render(
-      <SocialIdentityManager
-        identities={identities}
-        onUnlinkProvider={() => {}}
-      />,
-    );
+    render(<SocialIdentityManager identities={identities} onUnlinkProvider={() => {}} />);
     const unlinkButton = screen.getByLabelText('Unlink Google account');
     expect(unlinkButton).toBeInTheDocument();
   });
@@ -94,12 +82,7 @@ describe('SocialIdentityManager', () => {
       { provider: 'google' as const, email: 'user@gmail.com' },
       { provider: 'github' as const, email: 'user@github.com', isPrimary: true },
     ];
-    render(
-      <SocialIdentityManager
-        identities={identities}
-        onUnlinkProvider={onUnlink}
-      />,
-    );
+    render(<SocialIdentityManager identities={identities} onUnlinkProvider={onUnlink} />);
 
     const unlinkButton = screen.getByLabelText('Unlink Google account');
     await user.click(unlinkButton);
@@ -113,9 +96,7 @@ describe('SocialIdentityManager', () => {
       { provider: 'google' as const, email: 'user@gmail.com' },
       { provider: 'github' as const, email: 'user@github.com', isPrimary: true },
     ];
-    render(
-      <SocialIdentityManager identities={identities} onUnlinkProvider={onUnlink} />,
-    );
+    render(<SocialIdentityManager identities={identities} onUnlinkProvider={onUnlink} />);
 
     const unlinkButton = screen.getByLabelText('Unlink Google account');
     await user.click(unlinkButton);
@@ -126,12 +107,7 @@ describe('SocialIdentityManager', () => {
   });
 
   it('prevents unlink when only one account linked', () => {
-    render(
-      <SocialIdentityManager
-        identities={mockIdentities}
-        onUnlinkProvider={() => {}}
-      />,
-    );
+    render(<SocialIdentityManager identities={mockIdentities} onUnlinkProvider={() => {}} />);
     expect(screen.getByText('One account remaining')).toBeInTheDocument();
   });
 
@@ -141,7 +117,7 @@ describe('SocialIdentityManager', () => {
         identities={mockIdentities}
         isLoading={true}
         onUnlinkProvider={() => {}}
-      />,
+      />
     );
     // The button should still be in the DOM but disabled via pointer-events
     const buttons = screen.getAllByRole('button');
@@ -157,9 +133,7 @@ describe('SocialIdentityManager', () => {
       { provider: 'google' as const, email: 'user@gmail.com', isPrimary: true },
       { provider: 'github' as const, email: 'user@github.com' },
     ];
-    render(
-      <SocialIdentityManager identities={identities} onSetPrimary={() => {}} />,
-    );
+    render(<SocialIdentityManager identities={identities} onSetPrimary={() => {}} />);
     expect(screen.getByText('Set Primary')).toBeInTheDocument();
   });
 
@@ -170,9 +144,7 @@ describe('SocialIdentityManager', () => {
       { provider: 'google' as const, email: 'user@gmail.com', isPrimary: true },
       { provider: 'github' as const, email: 'user@github.com' },
     ];
-    render(
-      <SocialIdentityManager identities={identities} onSetPrimary={onSetPrimary} />,
-    );
+    render(<SocialIdentityManager identities={identities} onSetPrimary={onSetPrimary} />);
 
     const setPrimaryButton = screen.getByText('Set Primary');
     await user.click(setPrimaryButton);
@@ -181,10 +153,7 @@ describe('SocialIdentityManager', () => {
 
   it('applies custom className', () => {
     const { container } = render(
-      <SocialIdentityManager
-        identities={mockIdentities}
-        className="custom-class"
-      />,
+      <SocialIdentityManager identities={mockIdentities} className="custom-class" />
     );
     expect(container.firstChild).toHaveClass('custom-class');
   });

@@ -67,10 +67,10 @@ const sizeConfig = {
 
 /**
  * SocialLoginButton Component
- * 
+ *
  * Renders a styled button for OAuth2 social login providers.
  * Supports Google and GitHub with provider-specific branding.
- * 
+ *
  * Features:
  * - Provider-specific theming
  * - Loading state with spinner
@@ -78,7 +78,7 @@ const sizeConfig = {
  * - Icon-only variant
  * - Full keyboard accessibility
  * - Touch-friendly sizes
- * 
+ *
  * @example
  * ```tsx
  * <SocialLoginButton
@@ -101,7 +101,7 @@ export const SocialLoginButton = forwardRef<HTMLButtonElement, SocialLoginButton
       label,
       className = '',
     },
-    ref,
+    ref
   ) => {
     const config = providerConfig[provider];
     const ProviderIcon = config.icon;
@@ -136,13 +136,11 @@ export const SocialLoginButton = forwardRef<HTMLButtonElement, SocialLoginButton
         )}
 
         {!iconOnly && (
-          <span className="font-semibold">
-            {isLoading ? `Signing in...` : buttonLabel}
-          </span>
+          <span className="font-semibold">{isLoading ? `Signing in...` : buttonLabel}</span>
         )}
       </button>
     );
-  },
+  }
 );
 
 SocialLoginButton.displayName = 'SocialLoginButton';

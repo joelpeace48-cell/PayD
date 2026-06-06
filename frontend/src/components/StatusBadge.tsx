@@ -1,7 +1,13 @@
 import React from 'react';
 import { Check, Clock, AlertCircle, XCircle, Loader2 } from 'lucide-react';
 
-export type StatusBadgeVariant = 'success' | 'pending' | 'warning' | 'error' | 'loading' | 'neutral';
+export type StatusBadgeVariant =
+  | 'success'
+  | 'pending'
+  | 'warning'
+  | 'error'
+  | 'loading'
+  | 'neutral';
 
 export interface StatusBadgeProps {
   variant: StatusBadgeVariant;

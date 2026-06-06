@@ -78,13 +78,14 @@ export const FormField: React.FC<FormFieldProps> = ({
               required,
               'aria-required': required,
               'aria-invalid': hasError || undefined,
-              'aria-describedby': [
-                error ? errorId : undefined,
-                helpText && !error ? descriptionId : undefined,
-                showCharCount ? charactersId : undefined,
-              ]
-                .filter(Boolean)
-                .join(' ') || undefined,
+              'aria-describedby':
+                [
+                  error ? errorId : undefined,
+                  helpText && !error ? descriptionId : undefined,
+                  showCharCount ? charactersId : undefined,
+                ]
+                  .filter(Boolean)
+                  .join(' ') || undefined,
               maxLength: maxLength || undefined,
               className: [
                 typeof (children.props as Record<string, unknown>).className === 'string'
