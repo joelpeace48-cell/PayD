@@ -39,6 +39,10 @@ pub enum ContractError {
     InvariantViolation = 15,
     /// New beneficiary is the same as the current beneficiary.
     SameBeneficiary = 16,
+    /// start_time of zero is rejected — it almost certainly indicates a missing field.
+    InvalidStartTime = 17,
+    /// duration_seconds must be greater than zero.
+    ZeroDuration = 18,
 }
 
 // ── Events ────────────────────────────────────────────────────────────────────
@@ -211,6 +215,14 @@ impl VestingContract {
         }
 
         funder.require_auth();
+
+        if start_time == 0 {
+            return Err(ContractError::InvalidStartTime);
+        }
+
+        if duration_seconds == 0 {
+            return Err(ContractError::ZeroDuration);
+        }
 
         if duration_seconds < cliff_seconds {
             return Err(ContractError::InvalidDuration);
