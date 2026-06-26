@@ -153,3 +153,23 @@ fn partial_clawback_amount_exceeds_total_returns_invariant_violation() {
     let result = client.try_partial_clawback(&20_000i128);
     assert_eq!(result, Err(Ok(ContractError::InvariantViolation)));
 }
+
+// ── ISSUE #906 test ────────────────────────────────────────────────────────────
+
+#[test]
+fn transfer_beneficiary_to_same_address_returns_error() {
+    let (e, funder, beneficiary, clawback_admin, admin, token_contract, _, _, client) = setup();
+    init_default(
+        &client,
+        &e,
+        &funder,
+        &beneficiary,
+        &token_contract,
+        &clawback_admin,
+        &admin,
+    );
+
+    // Transferring to the current beneficiary must be rejected
+    let result = client.try_transfer_beneficiary(&beneficiary);
+    assert_eq!(result, Err(Ok(ContractError::SameBeneficiary)));
+}
