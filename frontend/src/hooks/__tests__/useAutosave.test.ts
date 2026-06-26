@@ -2,7 +2,7 @@ import { renderHook, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { useAutosave } from '../useAutosave';
 
-vi.mock('../utils/localStorage', () => {
+vi.mock('../../utils/localStorage', () => {
   return {
     LocalStorageHelper: vi.fn().mockImplementation(() => ({
       get: vi.fn().mockReturnValue(null),
@@ -12,7 +12,7 @@ vi.mock('../utils/localStorage', () => {
   };
 });
 
-import { LocalStorageHelper } from '../utils/localStorage';
+import { LocalStorageHelper } from '../../utils/localStorage';
 
 describe('useAutosave', () => {
   beforeEach(() => {

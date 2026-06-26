@@ -88,6 +88,7 @@ vi.mock('../components/ContractErrorPanel', () => ({
 
 vi.mock('../components/IssuerMultisigBanner', () => ({
   default: () => <div data-testid="multisig-banner" />,
+  IssuerMultisigBanner: () => <div data-testid="multisig-banner" />,
 }));
 
 vi.mock('../components/HelpLink', () => ({

@@ -23,6 +23,26 @@ describe('WalletQRCode', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     URL.createObjectURL = vi.fn(() => 'blob:test');
+
+    // jsdom doesn't fire img.onload — make it fire synchronously when src is set
+    vi.spyOn(window, 'Image').mockImplementation(() => {
+      const img = {} as HTMLImageElement;
+      Object.defineProperty(img, 'src', {
+        set(_url: string) {
+          if (typeof img.onload === 'function') img.onload(new Event('load'));
+        },
+        get() {
+          return '';
+        },
+      });
+      return img;
+    });
+
+    // jsdom doesn't implement canvas — provide minimal stubs
+    HTMLCanvasElement.prototype.getContext = vi.fn(
+      () => ({ drawImage: vi.fn() }) as unknown as CanvasRenderingContext2D
+    );
+    HTMLCanvasElement.prototype.toDataURL = vi.fn(() => 'data:image/png;base64,test');
   });
 
   it('renders download button and triggers download on click', () => {

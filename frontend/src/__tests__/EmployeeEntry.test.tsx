@@ -137,6 +137,10 @@ vi.mock('react-i18next', () => ({
 import EmployeeEntry, { validateEmailDomain } from '../pages/EmployeeEntry';
 
 describe('EmployeeEntry', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   it('creates an employee, generates a wallet, and returns the employee to the directory', () => {
     render(<EmployeeEntry />);
 
