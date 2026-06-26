@@ -261,3 +261,30 @@ fn test_threshold_changed_event() {
     client.set_threshold(&3);
     assert_eq!(client.threshold(), 3);
 }
+
+
+// ══════════════════════════════════════════════════════════════════════════════
+// ── ISSUE #903: signature type-mismatch tests ─────────────────────────────────
+// ══════════════════════════════════════════════════════════════════════════════
+
+#[test]
+fn ed25519_signer_rejects_secp256k1_proof() {
+    // Register an ed25519 signer, then submit a secp256k1 proof — type mismatch
+    // means signer_matches_proof always returns false → UnknownSigner.
+    let env = Env::default();
+
+    let (ed_signer_key, _ed_signing_key) = make_ed25519_signer(&env, [10u8; 32]);
+    let (_secp_signer_key, secp_signing_key) = make_secp256k1_signer(&env, [11u8; 32]);
+    let signers = Vec::from_array(&env, [ed_signer_key]);
+    let (contract_id, _client) = register_wallet(&env, signers, 1);
+
+    let raw = Bytes::from_slice(&env, &[42u8; 32]);
+    let payload = env.crypto().sha256(&raw);
+    // Submit a secp256k1 proof to a wallet that only has an ed25519 signer
+    let proof = Vec::from_array(&env, [sign_secp256k1(&payload, &secp_signing_key, &env)]);
+
+    env.as_contract(&contract_id, || {
+        let result = SmartWalletContract::verify_signatures_inner(&env, &payload, &proof);
+        assert_eq!(result, Err(WalletError::UnknownSigner));
+    });
+}
