@@ -1,6 +1,14 @@
 import request from 'supertest';
 import express from 'express';
 
+// Mock database before importing anything else
+jest.mock('../../config/database.js', () => ({
+  __esModule: true,
+  pool: {
+    query: jest.fn(),
+  },
+}));
+
 // Mock env config before importing routes
 jest.mock('../../config/env', () => ({
   config: {
@@ -133,6 +141,30 @@ describe('EmployeeController', () => {
 
       await request(app).get('/api/employees/999').expect(404);
     });
+
+    it('should return 400 for negative ID', async () => {
+      const response = await request(app).get('/api/employees/-1').expect(400);
+
+      expect(response.body).toHaveProperty('code', 'BAD_REQUEST');
+      expect(response.body).toHaveProperty('message', 'Invalid ID');
+      expect(employeeService.findById).not.toHaveBeenCalled();
+    });
+
+    it('should return 400 for zero ID', async () => {
+      const response = await request(app).get('/api/employees/0').expect(400);
+
+      expect(response.body).toHaveProperty('code', 'BAD_REQUEST');
+      expect(response.body).toHaveProperty('message', 'Invalid ID');
+      expect(employeeService.findById).not.toHaveBeenCalled();
+    });
+
+    it('should return 400 for non-numeric ID (NaN)', async () => {
+      const response = await request(app).get('/api/employees/abc').expect(400);
+
+      expect(response.body).toHaveProperty('code', 'BAD_REQUEST');
+      expect(response.body).toHaveProperty('message', 'Invalid ID');
+      expect(employeeService.findById).not.toHaveBeenCalled();
+    });
   });
 
   describe('PATCH /api/employees/:id', () => {
@@ -150,6 +182,28 @@ describe('EmployeeController', () => {
         expect.objectContaining(updateData)
       );
     });
+
+    it('should return 400 for negative ID', async () => {
+      const response = await request(app)
+        .patch('/api/employees/-1')
+        .send({ first_name: 'Johnny' })
+        .expect(400);
+
+      expect(response.body).toHaveProperty('code', 'BAD_REQUEST');
+      expect(response.body).toHaveProperty('message', 'Invalid ID');
+      expect(employeeService.update).not.toHaveBeenCalled();
+    });
+
+    it('should return 400 for non-numeric ID', async () => {
+      const response = await request(app)
+        .patch('/api/employees/invalid')
+        .send({ first_name: 'Johnny' })
+        .expect(400);
+
+      expect(response.body).toHaveProperty('code', 'BAD_REQUEST');
+      expect(response.body).toHaveProperty('message', 'Invalid ID');
+      expect(employeeService.update).not.toHaveBeenCalled();
+    });
   });
 
   describe('DELETE /api/employees/:id', () => {
@@ -165,6 +219,22 @@ describe('EmployeeController', () => {
       (employeeService.delete as jest.Mock).mockResolvedValue(null);
 
       await request(app).delete('/api/employees/999').expect(404);
+    });
+
+    it('should return 400 for negative ID', async () => {
+      const response = await request(app).delete('/api/employees/-5').expect(400);
+
+      expect(response.body).toHaveProperty('code', 'BAD_REQUEST');
+      expect(response.body).toHaveProperty('message', 'Invalid ID');
+      expect(employeeService.delete).not.toHaveBeenCalled();
+    });
+
+    it('should return 400 for non-numeric ID', async () => {
+      const response = await request(app).delete('/api/employees/notanumber').expect(400);
+
+      expect(response.body).toHaveProperty('code', 'BAD_REQUEST');
+      expect(response.body).toHaveProperty('message', 'Invalid ID');
+      expect(employeeService.delete).not.toHaveBeenCalled();
     });
   });
 });
