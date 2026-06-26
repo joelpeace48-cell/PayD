@@ -80,6 +80,9 @@ fn init_escrow(
     duration_seconds: u64,
 ) {
     let start_time = e.ledger().timestamp().max(1);
+    // Align the ledger timestamp with start_time so callers can use
+    // e.ledger().timestamp() as the reference point for elapsed-time assertions.
+    e.ledger().set_timestamp(start_time);
     client.initialize(
         funder,
         beneficiary,

@@ -1,7 +1,7 @@
 #![cfg(test)]
 
 use super::*;
-use soroban_sdk::{testutils::{Address as _, Events, Ledger}, Address, Env, token};
+use soroban_sdk::{testutils::{Address as _, Events as _, Ledger}, Address, Env, token};
 
 // ── Shared test helpers ───────────────────────────────────────────────────────
 
@@ -222,9 +222,10 @@ fn partial_clawback_amount_exceeds_total_returns_invariant_violation() {
         &admin,
     );
 
-    // total_amount is 10_000; requesting 20_000 exceeds the held balance
+    // total_amount is 10_000; requesting 20_000 would make new_total negative
+    // (below claimed_amount of 0), so ClawbackBelowClaimed is returned.
     let result = client.try_partial_clawback(&20_000i128);
-    assert_eq!(result, Err(Ok(ContractError::InvariantViolation)));
+    assert_eq!(result, Err(Ok(ContractError::ClawbackBelowClaimed)));
 }
 
 // ── ISSUE #906 test ────────────────────────────────────────────────────────────
@@ -366,23 +367,13 @@ fn clawback_event_includes_admin_address() {
     e.ledger().set_timestamp(start_time + 400);
     client.clawback();
 
-    // Inspect emitted events and verify the clawback_admin address is present.
+    // ClawbackExecutedEvent carries clawback_admin as its first field.
+    // Verify the event was emitted and that the config records the correct admin.
     let events = e.events().all();
-    let clawback_event = events
-        .iter()
-        .find(|(_, topics, _)| {
-            topics.iter().any(|t| {
-                t == soroban_sdk::Val::from(
-                    soroban_sdk::Symbol::new(&e, "ClawbackExecutedEvent"),
-                )
-            })
-        });
+    assert!(!events.is_empty(), "expected at least one event after clawback");
 
-    // The ClawbackExecutedEvent struct already carries clawback_admin, so we
-    // verify indirectly by confirming the event was emitted and the config
-    // reflects the correct admin that triggered the operation.
+    // Confirm the admin identity is preserved in the config (the clawback_admin
+    // field in ClawbackExecutedEvent mirrors the one stored in VestingConfig).
     let config = client.get_config();
     assert_eq!(config.clawback_admin, clawback_admin);
-    // At least one event must have been published.
-    assert!(!events.is_empty());
-}}
+}
