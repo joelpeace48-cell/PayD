@@ -371,3 +371,112 @@ fn mixed_multisig_correct_types_satisfy_threshold() {
         SmartWalletContract::verify_signatures_inner(&env, &payload, &proofs).unwrap();
     });
 }
+
+// ══════════════════════════════════════════════════════════════════════════════
+// ── ISSUE #900: duplicate-signer guard and cross-key-type tests ───────────────
+// ══════════════════════════════════════════════════════════════════════════════
+
+/// Submitting the same signer's proof twice must not count toward the threshold
+/// more than once.
+///
+/// How the guard works: the inner loop in verify_signatures_inner() skips any
+/// signer slot already in `used_signers`.  When the same proof is submitted a
+/// second time, no unused matching slot remains and the call returns
+/// `UnknownSigner` rather than incrementing `valid_signatures` again.
+#[test]
+fn duplicate_ed25519_proof_only_counts_once() {
+    let env = Env::default();
+
+    let (ed_signer_key, ed_signing_key) = make_ed25519_signer(&env, [50u8; 32]);
+    // Register one signer; threshold = 1 so the first proof satisfies it.
+    let signers = Vec::from_array(&env, [ed_signer_key]);
+    let (contract_id, _client) = register_wallet(&env, signers, 1);
+
+    let raw = Bytes::from_slice(&env, &[55u8; 32]);
+    let payload = env.crypto().sha256(&raw);
+    let proof = sign_ed25519(&payload, &ed_signing_key, &env);
+
+    // Submit the same proof twice.  The first consumption of slot 0 is valid;
+    // the second finds slot 0 already in `used_signers` and cannot re-match.
+    let proofs = Vec::from_array(&env, [proof.clone(), proof]);
+    env.as_contract(&contract_id, || {
+        let result = SmartWalletContract::verify_signatures_inner(&env, &payload, &proofs);
+        assert_eq!(result, Err(WalletError::UnknownSigner));
+    });
+}
+
+/// 2-of-2 wallet: attacker submits signer A's proof twice instead of A + B.
+/// The duplicate must NOT satisfy the threshold.
+#[test]
+fn duplicate_ed25519_proof_cannot_satisfy_two_of_two_threshold() {
+    let env = Env::default();
+
+    let (ed_signer_key_a, ed_signing_key_a) = make_ed25519_signer(&env, [60u8; 32]);
+    let (ed_signer_key_b, _) = make_ed25519_signer(&env, [61u8; 32]);
+    let signers = Vec::from_array(&env, [ed_signer_key_a, ed_signer_key_b]);
+    let (contract_id, _client) = register_wallet(&env, signers, 2);
+
+    let raw = Bytes::from_slice(&env, &[66u8; 32]);
+    let payload = env.crypto().sha256(&raw);
+    let proof_a = sign_ed25519(&payload, &ed_signing_key_a, &env);
+
+    // Slot A is consumed by the first proof; the second finds no unused match.
+    let proofs = Vec::from_array(&env, [proof_a.clone(), proof_a]);
+    env.as_contract(&contract_id, || {
+        let result = SmartWalletContract::verify_signatures_inner(&env, &payload, &proofs);
+        assert_eq!(result, Err(WalletError::UnknownSigner));
+    });
+}
+
+/// Ed25519 and secp256k1 keys from the "same person" occupy separate signer
+/// slots and are counted independently — no cross-type conflation or
+/// double-counting in either direction.
+#[test]
+fn ed25519_and_secp256k1_same_person_count_as_independent_signers() {
+    let env = Env::default();
+
+    let (ed_signer_key, ed_signing_key) = make_ed25519_signer(&env, [70u8; 32]);
+    let (secp_signer_key, secp_signing_key) = make_secp256k1_signer(&env, [71u8; 32]);
+
+    // Register both key types; threshold = 2.
+    let signers = Vec::from_array(&env, [ed_signer_key, secp_signer_key]);
+    let (contract_id, _client) = register_wallet(&env, signers, 2);
+
+    let raw = Bytes::from_slice(&env, &[77u8; 32]);
+    let payload = env.crypto().sha256(&raw);
+    let proofs = Vec::from_array(
+        &env,
+        [
+            sign_ed25519(&payload, &ed_signing_key, &env),
+            sign_secp256k1(&payload, &secp_signing_key, &env),
+        ],
+    );
+
+    env.as_contract(&contract_id, || {
+        // Each key fills its own slot (indices 0 and 1) → valid_signatures = 2.
+        SmartWalletContract::verify_signatures_inner(&env, &payload, &proofs).unwrap();
+    });
+}
+
+/// Cross-type mismatch: an Ed25519 proof submitted to a wallet whose only
+/// signer is registered as secp256k1 must return UnknownSigner.
+/// Confirms signer_matches_proof() is type-aware and never cross-matches.
+#[test]
+fn cross_type_ed25519_proof_against_secp256k1_slot_fails() {
+    let env = Env::default();
+
+    let (_ed_key, ed_signing_key) = make_ed25519_signer(&env, [80u8; 32]);
+    let (secp_key, _) = make_secp256k1_signer(&env, [81u8; 32]);
+
+    let signers = Vec::from_array(&env, [secp_key]);
+    let (contract_id, _client) = register_wallet(&env, signers, 1);
+
+    let raw = Bytes::from_slice(&env, &[88u8; 32]);
+    let payload = env.crypto().sha256(&raw);
+    let proof = Vec::from_array(&env, [sign_ed25519(&payload, &ed_signing_key, &env)]);
+
+    env.as_contract(&contract_id, || {
+        let result = SmartWalletContract::verify_signatures_inner(&env, &payload, &proof);
+        assert_eq!(result, Err(WalletError::UnknownSigner));
+    });
+}
